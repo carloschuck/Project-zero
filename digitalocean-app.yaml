@@ -1,0 +1,79 @@
+# DigitalOcean App Platform Specification
+name: ticketing-system
+region: nyc
+
+# Database
+databases:
+  - name: ticketing-db
+    engine: PG
+    version: "15"
+    production: true
+    size: basic-xs
+
+# Services
+services:
+  # Backend API
+  - name: backend
+    github:
+      repo: your-username/your-repo
+      branch: main
+      deploy_on_push: true
+    source_dir: /backend
+    dockerfile_path: backend/Dockerfile
+    http_port: 5000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /api
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "5000"
+      - key: DB_HOST
+        value: ${ticketing-db.HOSTNAME}
+      - key: DB_PORT
+        value: ${ticketing-db.PORT}
+      - key: DB_NAME
+        value: ${ticketing-db.DATABASE}
+      - key: DB_USER
+        value: ${ticketing-db.USERNAME}
+      - key: DB_PASSWORD
+        value: ${ticketing-db.PASSWORD}
+      - key: JWT_SECRET
+        type: SECRET
+        value: your-jwt-secret-here
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: FRONTEND_URL
+        value: ${APP_URL}
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 30
+      period_seconds: 60
+      timeout_seconds: 10
+
+  # Frontend
+  - name: frontend
+    github:
+      repo: your-username/your-repo
+      branch: main
+      deploy_on_push: true
+    source_dir: /frontend
+    dockerfile_path: frontend/Dockerfile
+    http_port: 80
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /
+    build_command: |
+      echo "VITE_API_URL=${APP_URL}/api" > .env.production
+      npm run build
+
+# Static assets (optional - for CDN)
+static_sites: []
+
+# Workers (optional - for background jobs)
+workers: []
+
+

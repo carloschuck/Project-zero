@@ -1,0 +1,194 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Layout from '../components/Layout';
+import { requestsApi, categoriesApi } from '../services/api';
+import { ArrowLeft, Send } from 'lucide-react';
+
+const CreateRequest = () => {
+  const [categories, setCategories] = useState([]);
+  const [formData, setFormData] = useState({
+    categoryId: '',
+    subject: '',
+    description: '',
+    priority: 'medium',
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await categoriesApi.getAll();
+      setCategories(response.data.categories);
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await requestsApi.create(formData);
+      navigate(`/requests/${response.data.request.id}`);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to create request');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  return (
+    <Layout>
+      <div className="max-w-3xl mx-auto space-y-6">
+        {/* Header */}
+        <div>
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 mb-4"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            Back
+          </button>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            Create New Request
+          </h1>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
+            Fill out the form below to submit a new support request
+          </p>
+        </div>
+
+        {/* Form */}
+        <div className="card">
+          {error && (
+            <div className="mb-6 p-4 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Category <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="categoryId"
+                name="categoryId"
+                required
+                value={formData.categoryId}
+                onChange={handleChange}
+                className="input"
+              >
+                <option value="">Select a category</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Priority <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="priority"
+                name="priority"
+                required
+                value={formData.priority}
+                onChange={handleChange}
+                className="input"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="subject" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Subject <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="subject"
+                name="subject"
+                type="text"
+                required
+                maxLength={255}
+                value={formData.subject}
+                onChange={handleChange}
+                className="input"
+                placeholder="Brief description of the issue"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Description <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                required
+                rows={8}
+                value={formData.description}
+                onChange={handleChange}
+                className="input"
+                placeholder="Provide detailed information about your request..."
+              />
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                Please include as much detail as possible to help us assist you better.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary flex items-center"
+              >
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-5 h-5 mr-2" />
+                    Submit Request
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Layout>
+  );
+};
+
+export default CreateRequest;
+
+

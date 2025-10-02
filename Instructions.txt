@@ -1,0 +1,43 @@
+Build a full-stack web application that will be deployed on DigitalOcean.  
+
+## Core Requirements
+- Web app with a **dashboard** (modern, responsive design with a clean UI, dark mode toggle).  
+- **Authentication & role-based access control** for:
+  - Admin
+  - Regular Users
+  - Department Leads
+  - Event Coordinators  
+
+## Features
+1. **Role-Based Dashboards**
+   - Admin: manage all tickets, users, and categories.
+   - Department Lead: view tickets relevant to their department, update statuses, assign tickets.
+   - Event Coordinator: view event-related requests, track statuses.
+   - Regular Users: submit and track their own tickets.
+
+2. **Ticketing System**
+   - Ticket submission form with fields: category, subject, description, attachments,   
+   - Categories include:
+     - Technical Support
+     - Web Support
+     - Video/Graphics
+     - Social Media
+     - Other Requests  
+   - Tickets should have status states: `Open`, `In Progress`, `Resolved`, `Closed`.
+
+3. **Notifications**
+   - Email notifications (on submission, status updates).  
+   - In-app notifications for assigned or updated tickets.  
+
+4. **Scalability**
+   - Dashboard should include **placeholder tabs** for future functionality (e.g., reports, analytics, user management).  
+
+## Technical Specs
+- **Frontend:** React (with Vite or Next.js) + TailwindCSS for modern responsive UI.  
+- **Backend:** Node.js (Express) with REST API.  
+- **Database:** PostgreSQL.  
+- **Authentication:** JWT-based auth with role-based access.  
+- **Deployment:** Dockerized app deployed to DigitalOcean as an app platform  
+
+## Additional Notes
+- Ensure **modular architecture** for future expansion.  
