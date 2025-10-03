@@ -47,11 +47,21 @@ const CreateRequest = () => {
           : 'New Event Request';
       }
 
+      // Filter out file fields from metadata before sending to API
+      // Files will be uploaded separately after request creation
+      const fileFields = selectedCategory?.form_schema?.filter(field => field.type === 'file') || [];
+      const metadataWithoutFiles = { ...submitData.metadata };
+      
+      for (const field of fileFields) {
+        delete metadataWithoutFiles[field.id];
+      }
+      
+      submitData.metadata = metadataWithoutFiles;
+
       const response = await requestsApi.create(submitData);
       
       // Handle file uploads if present in metadata
       const ticketId = response.data.request.id;
-      const fileFields = selectedCategory?.form_schema?.filter(field => field.type === 'file') || [];
       
       for (const field of fileFields) {
         const files = formData.metadata?.[field.id];
