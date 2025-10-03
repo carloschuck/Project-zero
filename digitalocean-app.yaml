@@ -1,14 +1,14 @@
 # DigitalOcean App Platform Specification
 name: ticketing-system
-region: nyc
+region: sfo
 
 # Database
 databases:
   - name: ticketing-db
     engine: PG
     version: "15"
-    production: true
-    size: basic-xs
+    production: false
+    size: db-s-dev-database
 
 # Services
 services:
