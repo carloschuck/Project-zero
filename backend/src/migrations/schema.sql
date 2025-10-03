@@ -109,6 +109,45 @@ INSERT INTO users (email, password, first_name, last_name, role, department) VAL
   ('admin@ticketing.com', '$2b$10$OMotKrKf36G/2fMx3E91oeh9pFp4/z2zJVpjNs46bI17kzyRUb7jK', 'Admin', 'User', 'admin', 'IT')
 ON CONFLICT (email) DO NOTHING;
 
+-- System Settings table for application configuration
+CREATE TABLE IF NOT EXISTS system_settings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  setting_key VARCHAR(100) UNIQUE NOT NULL,
+  setting_value TEXT,
+  setting_type VARCHAR(50) DEFAULT 'string',
+  description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create index on setting_key for faster lookups
+CREATE INDEX IF NOT EXISTS idx_system_settings_key ON system_settings(setting_key);
+
+-- Insert default system settings
+INSERT INTO system_settings (setting_key, setting_value, setting_type, description) VALUES
+  -- Email Configuration
+  ('smtp_host', '', 'string', 'SMTP server hostname'),
+  ('smtp_port', '587', 'number', 'SMTP server port'),
+  ('smtp_secure', 'false', 'boolean', 'Use SSL/TLS for secure connection'),
+  ('smtp_username', '', 'string', 'SMTP authentication username'),
+  ('smtp_password', '', 'password', 'SMTP authentication password'),
+  ('email_from_address', '', 'string', 'From email address'),
+  ('email_from_name', 'Ticketing System', 'string', 'From name for emails'),
+  
+  -- Notification Preferences
+  ('notify_on_request_created', 'true', 'boolean', 'Send email when request is created'),
+  ('notify_on_request_updated', 'true', 'boolean', 'Send email when request is updated'),
+  ('notify_on_request_assigned', 'true', 'boolean', 'Send email when request is assigned'),
+  ('notify_on_request_commented', 'true', 'boolean', 'Send email when comment is added'),
+  ('notify_admin_on_new_request', 'true', 'boolean', 'Notify admins of new requests'),
+  ('notify_user_on_status_change', 'true', 'boolean', 'Notify user when status changes'),
+  
+  -- Organization Details
+  ('org_name', 'Ticketing System', 'string', 'Organization name'),
+  ('org_support_email', 'support@example.com', 'string', 'Support contact email'),
+  ('org_website', 'https://example.com', 'string', 'Organization website URL')
+ON CONFLICT (setting_key) DO NOTHING;
+
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -124,6 +163,10 @@ CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
 
 -- Trigger for tickets table
 CREATE TRIGGER update_tickets_updated_at BEFORE UPDATE ON tickets
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Trigger for system_settings table
+CREATE TRIGGER update_system_settings_updated_at BEFORE UPDATE ON system_settings
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 
