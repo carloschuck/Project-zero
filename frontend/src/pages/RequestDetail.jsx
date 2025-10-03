@@ -38,6 +38,7 @@ const RequestDetail = () => {
 
   const canUpdate = user?.role === 'admin' || user?.role === 'department_lead' || user?.role === 'event_coordinator';
   const isAdmin = user?.role === 'admin';
+  const canSeeInternalNotes = user?.role === 'admin' || user?.role === 'department_lead';
 
   useEffect(() => {
     fetchRequest();
@@ -282,76 +283,6 @@ const RequestDetail = () => {
               <EventMetadataDisplay metadata={request.metadata} />
             )}
 
-            {/* Internal Notes (Admin/Staff Only) */}
-            {isAdmin && (
-              <div className="card border-2 border-amber-200 dark:border-amber-800">
-                <div className="flex items-center gap-2 mb-4">
-                  <Lock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Internal Notes
-                  </h2>
-                  <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                    (Admin Only)
-                  </span>
-                </div>
-
-                <div className="space-y-4 mb-6">
-                  {internalNotes.length === 0 ? (
-                    <p className="text-gray-600 dark:text-gray-400 text-center py-4">
-                      No internal notes yet
-                    </p>
-                  ) : (
-                    internalNotes.map((note) => (
-                      <div key={note.id} className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-800">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 bg-amber-600 rounded-full flex items-center justify-center">
-                              <UserIcon className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                {note.first_name} {note.last_name}
-                              </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">
-                                {note.role}
-                              </p>
-                            </div>
-                          </div>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
-                            {format(new Date(note.created_at), 'PPp')}
-                          </span>
-                        </div>
-                        <p className="text-gray-700 dark:text-gray-300 mt-2">
-                          {note.comment}
-                        </p>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                {/* Add Internal Note Form */}
-                <form onSubmit={handleAddInternalNote} className="border-t border-amber-200 dark:border-amber-800 pt-4">
-                  <textarea
-                    value={internalNoteText}
-                    onChange={(e) => setInternalNoteText(e.target.value)}
-                    placeholder="Add an internal note (visible only to admins)..."
-                    rows={3}
-                    className="input mb-3"
-                  />
-                  <div className="flex justify-end">
-                    <button
-                      type="submit"
-                      disabled={submittingInternalNote || !internalNoteText.trim()}
-                      className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg flex items-center disabled:opacity-50"
-                    >
-                      <Lock className="w-4 h-4 mr-2" />
-                      {submittingInternalNote ? 'Adding...' : 'Add Internal Note'}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-
             {/* Additional Notes */}
             <div className="card">
               <div className="flex items-center gap-2 mb-4">
@@ -416,6 +347,76 @@ const RequestDetail = () => {
                 </div>
               </form>
             </div>
+
+            {/* Internal Notes (Admin & Department Lead Only) */}
+            {canSeeInternalNotes && (
+              <div className="card border-2 border-amber-200 dark:border-amber-800">
+                <div className="flex items-center gap-2 mb-4">
+                  <Lock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Internal Notes
+                  </h2>
+                  <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                    (Admin & Department Lead Only)
+                  </span>
+                </div>
+
+                <div className="space-y-4 mb-6">
+                  {internalNotes.length === 0 ? (
+                    <p className="text-gray-600 dark:text-gray-400 text-center py-4">
+                      No internal notes yet
+                    </p>
+                  ) : (
+                    internalNotes.map((note) => (
+                      <div key={note.id} className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-800">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-8 h-8 bg-amber-600 rounded-full flex items-center justify-center">
+                              <UserIcon className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                {note.first_name} {note.last_name}
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {note.role}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {format(new Date(note.created_at), 'PPp')}
+                          </span>
+                        </div>
+                        <p className="text-gray-700 dark:text-gray-300 mt-2">
+                          {note.comment}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Add Internal Note Form */}
+                <form onSubmit={handleAddInternalNote} className="border-t border-amber-200 dark:border-amber-800 pt-4">
+                  <textarea
+                    value={internalNoteText}
+                    onChange={(e) => setInternalNoteText(e.target.value)}
+                    placeholder="Add an internal note (visible only to admins and department leads)..."
+                    rows={3}
+                    className="input mb-3"
+                  />
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={submittingInternalNote || !internalNoteText.trim()}
+                      className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg flex items-center disabled:opacity-50"
+                    >
+                      <Lock className="w-4 h-4 mr-2" />
+                      {submittingInternalNote ? 'Adding...' : 'Add Internal Note'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
