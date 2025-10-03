@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { Mail, Bell, FileText, Send, Save, Eye, Trash2 } from 'lucide-react';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import { settingsApi } from '../services/api';
 
 const Settings = () => {
   const [loading, setLoading] = useState(true);
@@ -208,7 +206,7 @@ const Settings = () => {
 
   const fetchSettings = async () => {
     try {
-      const response = await axios.get(`${API_URL}/settings`);
+      const response = await settingsApi.getAll();
       setSettings(prev => ({ ...prev, ...response.data.settings }));
     } catch (error) {
       console.error('Failed to fetch settings:', error);
@@ -242,7 +240,7 @@ const Settings = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      await axios.put(`${API_URL}/settings`, { settings });
+      await settingsApi.update(settings);
       showMessage('success', 'Settings saved successfully!');
     } catch (error) {
       console.error('Failed to save settings:', error);
@@ -262,7 +260,7 @@ const Settings = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      await axios.post(`${API_URL}/settings/test-email`, { recipient: testEmail });
+      await settingsApi.sendTestEmail(testEmail);
       showMessage('success', `Test email sent successfully to ${testEmail}!`);
     } catch (error) {
       console.error('Failed to send test email:', error);
@@ -283,7 +281,7 @@ const Settings = () => {
 
     try {
       // Send test with current template
-      await axios.post(`${API_URL}/settings/test-template`, { 
+      await settingsApi.sendTestTemplate({ 
         recipient: testTemplateEmail,
         template: selectedTemplate,
         subject: emailTemplates[selectedTemplate].subject,
