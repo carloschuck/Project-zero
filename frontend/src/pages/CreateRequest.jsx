@@ -3,14 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { requestsApi, categoriesApi } from '../services/api';
 import { ArrowLeft, Send } from 'lucide-react';
+import EventForm from '../components/EventForm';
+import DynamicFormRenderer from '../components/DynamicFormRenderer';
 
 const CreateRequest = () => {
   const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [formData, setFormData] = useState({
     categoryId: '',
     subject: '',
     description: '',
     priority: 'medium',
+    metadata: {}
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -35,7 +39,15 @@ const CreateRequest = () => {
     setLoading(true);
 
     try {
-      const response = await requestsApi.create(formData);
+      // Auto-generate subject for Events if not provided
+      const submitData = { ...formData };
+      if (isEventCategory() && !submitData.subject) {
+        submitData.subject = formData.metadata?.eventName 
+          ? `Event: ${formData.metadata.eventName}` 
+          : 'New Event Request';
+      }
+
+      const response = await requestsApi.create(submitData);
       navigate(`/requests/${response.data.request.id}`);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to create request');
@@ -45,10 +57,30 @@ const CreateRequest = () => {
   };
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
+    
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     });
+
+    // Update selected category when category changes
+    if (name === 'categoryId') {
+      const category = categories.find(c => c.id === value);
+      setSelectedCategory(category);
+      // Reset metadata when changing category
+      setFormData(prev => ({ ...prev, metadata: {} }));
+    }
+  };
+
+  // Helper to check if current category is Events (legacy)
+  const isEventCategory = () => {
+    return selectedCategory?.name?.toLowerCase() === 'events' && !hasCustomForm();
+  };
+
+  // Helper to check if category has custom form
+  const hasCustomForm = () => {
+    return selectedCategory?.form_schema && selectedCategory.form_schema.length > 0;
   };
 
   return (
@@ -120,41 +152,116 @@ const CreateRequest = () => {
               </select>
             </div>
 
-            <div>
-              <label htmlFor="subject" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Subject <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="subject"
-                name="subject"
-                type="text"
-                required
-                maxLength={255}
-                value={formData.subject}
-                onChange={handleChange}
-                className="input"
-                placeholder="Brief description of the issue"
-              />
-            </div>
+            {/* Show Custom Form, Event Form, or Standard Form based on category */}
+            {hasCustomForm() ? (
+              <>
+                {/* Subject for custom forms */}
+                <div>
+                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Subject <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="subject"
+                    name="subject"
+                    type="text"
+                    required
+                    maxLength={255}
+                    value={formData.subject}
+                    onChange={handleChange}
+                    className="input"
+                    placeholder="Brief description of your request"
+                  />
+                </div>
 
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Description <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                required
-                rows={8}
-                value={formData.description}
-                onChange={handleChange}
-                className="input"
-                placeholder="Provide detailed information about your request..."
-              />
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                Please include as much detail as possible to help us assist you better.
-              </p>
-            </div>
+                {/* Dynamic custom form fields */}
+                <DynamicFormRenderer 
+                  schema={selectedCategory.form_schema} 
+                  formData={formData} 
+                  setFormData={setFormData} 
+                />
+
+                {/* Description */}
+                <div>
+                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Description <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    id="description"
+                    name="description"
+                    required
+                    rows={6}
+                    value={formData.description}
+                    onChange={handleChange}
+                    className="input"
+                    placeholder="Provide detailed information about your request..."
+                  />
+                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Please include as much detail as possible to help us assist you better.
+                  </p>
+                </div>
+              </>
+            ) : isEventCategory() ? (
+              <>
+                <EventForm formData={formData} setFormData={setFormData} />
+                
+                <div>
+                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Description <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    id="description"
+                    name="description"
+                    required
+                    rows={6}
+                    value={formData.description}
+                    onChange={handleChange}
+                    className="input"
+                    placeholder="Detailed description of your request/changes"
+                  />
+                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Please include as much detail as possible to help us assist you better.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Subject <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="subject"
+                    name="subject"
+                    type="text"
+                    required
+                    maxLength={255}
+                    value={formData.subject}
+                    onChange={handleChange}
+                    className="input"
+                    placeholder="Brief description of the issue"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Description <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    id="description"
+                    name="description"
+                    required
+                    rows={8}
+                    value={formData.description}
+                    onChange={handleChange}
+                    className="input"
+                    placeholder="Provide detailed information about your request..."
+                  />
+                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Please include as much detail as possible to help us assist you better.
+                  </p>
+                </div>
+              </>
+            )}
 
             <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
               <button

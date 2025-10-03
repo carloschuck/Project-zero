@@ -12,6 +12,7 @@ import Users from './pages/Users';
 import Categories from './pages/Categories';
 import Analytics from './pages/Analytics';
 import Profile from './pages/Profile';
+import Settings from './pages/Settings';
 
 // Protected route component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -104,6 +105,15 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <Analytics />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Settings />
                 </ProtectedRoute>
               }
             />

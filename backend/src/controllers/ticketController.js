@@ -49,7 +49,7 @@ const createTicket = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { categoryId, subject, description, priority } = req.body;
+    const { categoryId, subject, description, priority, metadata } = req.body;
     const userId = req.user.id;
 
     await client.query('BEGIN');
@@ -57,12 +57,12 @@ const createTicket = async (req, res) => {
     // Generate unique request number based on category
     const requestNumber = await generateRequestNumber(client, categoryId);
 
-    // Create request
+    // Create request with metadata
     const requestResult = await client.query(
-      `INSERT INTO tickets (ticket_number, user_id, category_id, subject, description, priority, status)
-       VALUES ($1, $2, $3, $4, $5, $6, 'open')
+      `INSERT INTO tickets (ticket_number, user_id, category_id, subject, description, priority, status, metadata)
+       VALUES ($1, $2, $3, $4, $5, $6, 'open', $7)
        RETURNING *`,
-      [requestNumber, userId, categoryId, subject, description, priority || 'medium']
+      [requestNumber, userId, categoryId, subject, description, priority || 'medium', JSON.stringify(metadata || {})]
     );
 
     const request = requestResult.rows[0];

@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
-import { requestsApi, usersApi } from '../services/api';
+import { requestsApi, usersApi, categoriesApi } from '../services/api';
 import { ArrowLeft, Send, User as UserIcon, Calendar, Tag, AlertCircle, Edit, Save, X, Lock, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import StatusBadge from '../components/StatusBadge';
+import EventMetadataDisplay from '../components/EventMetadataDisplay';
+import DynamicMetadataDisplay from '../components/DynamicMetadataDisplay';
 
 const RequestDetail = () => {
   const { id } = useParams();
@@ -14,6 +16,7 @@ const RequestDetail = () => {
   const [request, setRequest] = useState(null);
   const [comments, setComments] = useState([]);
   const [history, setHistory] = useState([]);
+  const [category, setCategory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [commentText, setCommentText] = useState('');
   const [internalNoteText, setInternalNoteText] = useState('');
@@ -58,6 +61,15 @@ const RequestDetail = () => {
         subject: response.data.request.subject,
         description: response.data.request.description
       });
+      
+      // Fetch category to get form schema
+      if (response.data.request.category_id) {
+        const categoriesResponse = await categoriesApi.getAll();
+        const requestCategory = categoriesResponse.data.categories.find(
+          c => c.id === response.data.request.category_id
+        );
+        setCategory(requestCategory);
+      }
     } catch (error) {
       console.error('Failed to fetch request:', error);
     } finally {
@@ -258,6 +270,17 @@ const RequestDetail = () => {
                 </p>
               )}
             </div>
+
+            {/* Dynamic Custom Form Data */}
+            {category?.form_schema && category.form_schema.length > 0 ? (
+              <DynamicMetadataDisplay 
+                metadata={request.metadata} 
+                schema={category.form_schema} 
+              />
+            ) : request.metadata && Object.keys(request.metadata).length > 0 && (
+              /* Legacy Event Metadata */
+              <EventMetadataDisplay metadata={request.metadata} />
+            )}
 
             {/* Internal Notes (Admin/Staff Only) */}
             {isAdmin && (

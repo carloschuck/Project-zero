@@ -81,6 +81,26 @@ Password: Admin123!
 
 **⚠️ Change the password after first login!**
 
+## Quick Feature Guide
+
+After logging in, here's what you can do:
+
+### For All Users:
+1. **Dashboard** - Create and view your requests
+2. **Filters** - Use "Created by Me" to see your submitted requests
+3. **Search** - Find requests by number, subject, or description
+4. **Profile** - Update your information and change password
+5. **Dark Mode** - Toggle between light and dark themes
+6. **Notifications** - Check the bell icon for updates
+
+### For Admins:
+1. **Collapsible Sidebar** - Click the circular button to collapse/expand sidebar
+2. **Admin Panel** → **Users** - Manage user accounts and roles
+3. **Admin Panel** → **Categories** - Configure request categories
+4. **Admin Panel** → **Analytics & Reports** - View comprehensive analytics
+5. **All Filters** - Use "All Requests" or "Assigned to Me" filters
+6. **Export Reports** - Download CSV reports with custom date ranges
+
 ## Without Docker
 
 If you have PostgreSQL installed locally:
@@ -103,21 +123,101 @@ npm install
 npm run dev
 ```
 
+## Key Features Overview
+
+### 🎯 Dashboard
+- **Smart Filters**: Filter requests by status, category, search term, and ownership
+- **Owner Filter Options**:
+  - **All Requests**: See all requests (role-based access)
+  - **Assigned to Me**: View requests you're responsible for
+  - **Created by Me**: See requests you've submitted
+- **Advanced Search**: Search across request numbers, subjects, descriptions, and users
+- **Real-time Stats**: View request counts by status
+- **Column Visibility**: Customize which columns are displayed
+- **Responsive Design**: Works perfectly on mobile and desktop
+
+### 🛡️ Admin Panel (Admin Only)
+Expandable navigation menu with three sub-sections:
+- **👥 Users**: Manage user accounts, roles, and departments
+- **📁 Categories**: Configure request categories and departments
+- **📊 Analytics & Reports**: Comprehensive analytics dashboard
+
+### 📊 Analytics & Reports (Admin Only)
+- **Time Frame Filters**:
+  - All Time / Today / This Week / This Month / Last Month / This Year
+  - Custom Date Range picker
+- **Key Metrics Cards**:
+  - Total Requests
+  - Resolution Rate
+  - Average Resolution Time
+  - Active Requests
+- **Visual Charts**:
+  - Requests by Status (with progress bars)
+  - Requests by Priority (distribution)
+  - Requests by Category (top categories)
+- **Export Functionality**: Download CSV reports with filtered data
+
+### 🎨 User Interface
+- **Collapsible Sidebar**: Toggle between full view and icon-only view
+  - Click the circular button on sidebar header to collapse/expand
+  - Preference saved in browser (persists across sessions)
+  - Tooltips show on hover when collapsed
+- **Dark Mode**: Full dark theme support
+- **Notifications**: Real-time notification system with dropdown
+- **Responsive**: Mobile-friendly design with hamburger menu
+
+### 🔐 Role-Based Access
+- **Admin**: Full system access, user management, analytics
+- **Department Lead**: Access to department-specific requests
+- **Event Coordinator**: Access to event-related requests
+- **User**: Access to own requests only
+
 ## Next Steps
 
-1. ✅ Login with default credentials
+1. ✅ Login with default credentials (admin@ticketing.com / Admin123!)
 2. ✅ Change admin password (Profile → Change Password)
-3. ✅ Create a test ticket
-4. ✅ Try different user roles (see README.md for creating users)
-5. ✅ Explore the dashboard and features
+3. ✅ Explore the collapsible sidebar (click toggle button on sidebar header)
+4. ✅ Create a test request from Dashboard
+5. ✅ Try the dashboard filters (All Requests, Assigned to Me, Created by Me)
+6. ✅ Check Analytics & Reports (Admin Panel → Analytics & Reports)
+7. ✅ Export a report with custom time frame
+8. ✅ Toggle dark mode and explore the UI
+9. ✅ Create different user roles (see README.md for creating users)
+10. ✅ Test the mobile responsive design
 
 ## Troubleshooting
+
+### Changes not visible after update
+
+If you don't see recent changes after rebuilding:
+
+```bash
+# 1. Rebuild containers with no cache
+docker-compose up -d --build --force-recreate
+
+# 2. Hard refresh browser (clears cache)
+# Mac: Cmd + Shift + R
+# Windows/Linux: Ctrl + Shift + R
+
+# 3. Or open in incognito/private mode
+```
 
 ### Port 5000 already in use
 
 ```bash
 # Find and kill the process
 lsof -i :5000
+kill -9 <PID>
+
+# Or change the port in backend/.env
+PORT=5001
+```
+
+### Port 3000 already in use
+
+```bash
+# Find and kill the process
+lsof -i :3000
 kill -9 <PID>
 ```
 
@@ -127,8 +227,15 @@ kill -9 <PID>
 # Check PostgreSQL is running
 docker-compose ps
 
+# Check database logs
+docker-compose logs postgres
+
 # Restart database
 docker-compose restart postgres
+
+# If migrations haven't run, run them manually
+cd backend
+npm run migrate
 ```
 
 ### Frontend can't connect to backend
@@ -136,6 +243,23 @@ docker-compose restart postgres
 Check `frontend/.env` has:
 ```
 VITE_API_URL=http://localhost:5000/api
+```
+
+Verify backend is running:
+```bash
+curl http://localhost:5000/health
+# Should return: {"status":"ok"}
+```
+
+### Docker build fails
+
+```bash
+# Clean up Docker resources
+docker system prune -a
+
+# Remove all containers and rebuild
+docker-compose down -v
+docker-compose up -d --build
 ```
 
 ## Creating Test Users
@@ -161,12 +285,39 @@ curl -X POST http://localhost:5000/api/auth/register \
   }'
 ```
 
+## Production Deployment with Docker
+
+The application is production-ready and can be deployed using Docker Compose:
+
+```bash
+# Build and start all services
+docker-compose up -d --build
+
+# Check running containers
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+Services:
+- **Frontend**: http://localhost:3000 (Nginx + React production build)
+- **Backend**: http://localhost:5000 (Node.js Express API)
+- **Database**: PostgreSQL on port 5432
+
 ## Tech Stack Summary
 
-- **Frontend**: React 18 + Vite + TailwindCSS
+- **Frontend**: React 18 + Vite + TailwindCSS + React Router
 - **Backend**: Node.js + Express + PostgreSQL
-- **Auth**: JWT with role-based access control
-- **Deployment**: Docker + DigitalOcean ready
+- **Auth**: JWT with role-based access control (RBAC)
+- **UI Libraries**: Lucide Icons, date-fns for date formatting
+- **State Management**: React Context API (Auth, Theme)
+- **Deployment**: Docker + Docker Compose + DigitalOcean App Platform ready
+- **Database**: PostgreSQL 15+ with connection pooling
+- **File Uploads**: Multer for attachment handling
 
 ## Documentation
 

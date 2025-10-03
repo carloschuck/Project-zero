@@ -40,7 +40,7 @@ const createCategory = async (req, res) => {
 const updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, department } = req.body;
+    const { name, description, department, form_schema } = req.body;
 
     const updates = [];
     const params = [id];
@@ -61,6 +61,12 @@ const updateCategory = async (req, res) => {
     if (department !== undefined) {
       updates.push(`department = $${paramCount}`);
       params.push(department);
+      paramCount++;
+    }
+
+    if (form_schema !== undefined) {
+      updates.push(`form_schema = $${paramCount}`);
+      params.push(JSON.stringify(form_schema));
       paramCount++;
     }
 
