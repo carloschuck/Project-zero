@@ -1,18 +1,18 @@
-# DigitalOcean App Platform Specification
+# DigitalOcean App Platform Specification - Clean Production Setup
 name: ticketing-system
 region: sfo
 
-# Database
+# Database - Use PRODUCTION for full admin permissions
 databases:
   - name: ticketing-db
     engine: PG
     version: "15"
-    production: false
-    size: db-s-dev-database
+    production: true
+    size: db-s-1vcpu-1gb  # Smallest production database with full permissions
 
-# Jobs - Run before deployment
+# Jobs - Run database setup before deployment
 jobs:
-  - name: db-migration
+  - name: db-setup
     kind: PRE_DEPLOY
     github:
       repo: carloschuck/Project-zero
@@ -30,9 +30,9 @@ jobs:
       - key: DB_NAME
         value: ${ticketing-db.DATABASE}
       - key: DB_USER
-        value: doadmin
+        value: ${ticketing-db.USERNAME}
       - key: DB_PASSWORD
-        value: ${ticketing-db.DOADMIN_PASSWORD}
+        value: ${ticketing-db.PASSWORD}
     run_command: "node setup-db.js"
 
 # Services
@@ -62,9 +62,9 @@ services:
       - key: DB_NAME
         value: ${ticketing-db.DATABASE}
       - key: DB_USER
-        value: doadmin
+        value: ${ticketing-db.USERNAME}
       - key: DB_PASSWORD
-        value: ${ticketing-db.DOADMIN_PASSWORD}
+        value: ${ticketing-db.PASSWORD}
       - key: JWT_SECRET
         type: SECRET
         value: dbfcb85badd5a9e134956f1b17b6d682c0e82107a8a7ed940b911df2f3436184572a790cc4030c4e990f3c9522594fe3aee343150685e210c2ed627e842836dd
@@ -91,14 +91,6 @@ services:
     instance_size_slug: basic-xxs
     routes:
       - path: /
-    build_command: |
-      echo "VITE_API_URL=${APP_URL}/api" > .env.production
-      npm run build
-
-# Static assets (optional - for CDN)
-static_sites: []
-
-# Workers (optional - for background jobs)
-workers: []
-
-
+    envs:
+      - key: VITE_API_URL
+        value: ${backend.PUBLIC_URL}/api

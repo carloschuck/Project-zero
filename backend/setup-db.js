@@ -46,7 +46,7 @@ async function setup() {
        VALUES ($1, $2, $3, $4, $5, NOW())
        ON CONFLICT (email) DO NOTHING
        RETURNING id`,
-      ['admin@company.com', hashedPassword, 'Admin', 'User', 'admin']
+      ['carloschuck@me.com', hashedPassword, 'Admin', 'User', 'admin']
     );
     
     if (result.rowCount > 0) {
@@ -59,7 +59,7 @@ async function setup() {
     console.log('🎉 Setup complete!');
     console.log('');
     console.log('Login with:');
-    console.log('  Email: admin@company.com');
+    console.log('  Email: carloschuck@me.com');
     console.log('  Password: admin123');
     
   } catch (error) {
@@ -75,4 +75,3 @@ setup().then(() => process.exit(0)).catch(err => {
   console.error(err);
   process.exit(1);
 });
-

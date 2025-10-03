@@ -107,16 +107,6 @@ const Login = () => {
               </Link>
             </p>
           </div>
-
-          <div className="mt-6 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
-            <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-              <strong>Demo Credentials:</strong>
-            </p>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              Email: admin@ticketing.com<br />
-              Password: Admin123!
-            </p>
-          </div>
         </div>
       </div>
     </div>
