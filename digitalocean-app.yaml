@@ -15,7 +15,7 @@ services:
   # Backend API
   - name: backend
     github:
-      repo: your-username/your-repo
+      repo: carloschuck/Project-zero
       branch: main
       deploy_on_push: true
     source_dir: /backend
@@ -56,7 +56,7 @@ services:
   # Frontend
   - name: frontend
     github:
-      repo: your-username/your-repo
+      repo: carloschuck/Project-zero
       branch: main
       deploy_on_push: true
     source_dir: /frontend
