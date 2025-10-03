@@ -92,10 +92,30 @@ const createTicket = async (req, res) => {
 
     await client.query('COMMIT');
 
-    // Send email notification (async, don't wait)
+    // Send email notification to creator (async, don't wait)
     sendRequestEmail('created', request, req.user).catch(err => 
       console.error('Email notification failed:', err)
     );
+
+    // Send email notification to admins (async, don't wait)
+    const categoryResult = await pool.query('SELECT name FROM categories WHERE id = $1', [categoryId]);
+    const categoryName = categoryResult.rows[0]?.name || 'N/A';
+    
+    for (const admin of adminUsers.rows) {
+      const adminInfo = await pool.query(
+        'SELECT email, first_name, last_name FROM users WHERE id = $1',
+        [admin.id]
+      );
+      
+      if (adminInfo.rows.length > 0) {
+        sendRequestEmail('admin_new_request', request, adminInfo.rows[0], {
+          creatorName: `${req.user.first_name} ${req.user.last_name}`,
+          categoryName: categoryName
+        }).catch(err =>
+          console.error('Admin email notification failed:', err)
+        );
+      }
+    }
 
     res.status(201).json({
       message: 'Request created successfully',
@@ -436,6 +456,11 @@ const updateTicket = async (req, res) => {
       params.push(status);
       paramCount++;
 
+      // Set resolved_at timestamp when ticket is resolved or closed
+      if ((status === 'resolved' || status === 'closed') && !ticket.resolved_at) {
+        updates.push(`resolved_at = CURRENT_TIMESTAMP`);
+      }
+
       // Add to history
       await client.query(
         `INSERT INTO ticket_history (ticket_id, user_id, action, old_value, new_value)
@@ -487,11 +512,41 @@ const updateTicket = async (req, res) => {
     const query = `UPDATE tickets SET ${updates.join(', ')} WHERE id = $1 RETURNING *`;
     const result = await client.query(query, params);
 
+    const updatedTicket = result.rows[0];
+
     await client.query('COMMIT');
+
+    // Send email notifications for status changes (async, don't wait)
+    if (status) {
+      const ticketOwner = await pool.query(
+        'SELECT email, first_name, last_name FROM users WHERE id = $1',
+        [ticket.user_id]
+      );
+      
+      if (ticketOwner.rows.length > 0) {
+        sendRequestEmail('updated', updatedTicket, ticketOwner.rows[0]).catch(err =>
+          console.error('Email notification failed:', err)
+        );
+      }
+    }
+
+    // Send email notification for assignments (async, don't wait)
+    if (assignedTo) {
+      const assignedUser = await pool.query(
+        'SELECT email, first_name, last_name FROM users WHERE id = $1',
+        [assignedTo]
+      );
+      
+      if (assignedUser.rows.length > 0) {
+        sendRequestEmail('assigned', updatedTicket, assignedUser.rows[0]).catch(err =>
+          console.error('Email notification failed:', err)
+        );
+      }
+    }
 
     res.json({
       message: 'Request updated successfully',
-      request: result.rows[0]
+      request: updatedTicket
     });
   } catch (error) {
     await client.query('ROLLBACK');
@@ -540,6 +595,35 @@ const addComment = async (req, res) => {
     }
 
     await client.query('COMMIT');
+
+    // Send email notification for comments (async, don't wait)
+    if (requestInfo.rows.length > 0 && !isInternal) {
+      const request = requestInfo.rows[0];
+      
+      // Email ticket owner if commenter is different
+      if (request.user_id !== req.user.id) {
+        const ticketOwner = await pool.query(
+          'SELECT email, first_name, last_name FROM users WHERE id = $1',
+          [request.user_id]
+        );
+        
+        if (ticketOwner.rows.length > 0) {
+          const fullRequest = await pool.query(
+            'SELECT ticket_number, subject FROM tickets WHERE id = $1',
+            [id]
+          );
+          
+          if (fullRequest.rows.length > 0) {
+            sendRequestEmail('comment', fullRequest.rows[0], ticketOwner.rows[0], {
+              commenterName: `${req.user.first_name} ${req.user.last_name}`,
+              comment: comment
+            }).catch(err =>
+              console.error('Comment email notification failed:', err)
+            );
+          }
+        }
+      }
+    }
 
     res.status(201).json({
       message: 'Comment added successfully',
