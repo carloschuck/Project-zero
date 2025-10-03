@@ -43,11 +43,20 @@ export const notificationsApi = {
   markAllAsRead: () => axios.post(`${API_URL}/notifications/mark-all-read`),
 };
 
+// Settings
+export const settingsApi = {
+  getAll: () => axios.get(`${API_URL}/settings`),
+  update: (settings) => axios.put(`${API_URL}/settings`, { settings }),
+  sendTestEmail: (recipient) => axios.post(`${API_URL}/settings/test-email`, { recipient }),
+  sendTestTemplate: (data) => axios.post(`${API_URL}/settings/test-template`, data),
+};
+
 export default {
   tickets: ticketsApi,
   users: usersApi,
   categories: categoriesApi,
   notifications: notificationsApi,
+  settings: settingsApi,
 };
 
 
