@@ -323,9 +323,9 @@ const getTicketById = async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    // Get comments
-    const comments = await pool.query(
-      `SELECT 
+    // Get comments (filter internal notes based on role)
+    let commentsQuery = `
+      SELECT 
         c.*,
         u.first_name,
         u.last_name,
@@ -333,9 +333,16 @@ const getTicketById = async (req, res) => {
       FROM comments c
       JOIN users u ON c.user_id = u.id
       WHERE c.ticket_id = $1
-      ORDER BY c.created_at ASC`,
-      [id]
-    );
+    `;
+    
+    // Filter internal notes for non-privileged users
+    if (req.user.role !== 'admin' && req.user.role !== 'department_lead') {
+      commentsQuery += ` AND c.is_internal = false`;
+    }
+    
+    commentsQuery += ` ORDER BY c.created_at ASC`;
+    
+    const comments = await pool.query(commentsQuery, [id]);
 
     // Get attachments
     const attachments = await pool.query(
