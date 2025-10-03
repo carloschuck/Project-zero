@@ -13,8 +13,11 @@ RUN npm ci
 # Copy application files
 COPY . .
 
-# Build the application without specific API URL
-# API URL will be injected at runtime
+# Build with a placeholder - the app will use relative paths in production
+ARG VITE_API_URL=/api
+ENV VITE_API_URL=$VITE_API_URL
+
+# Build the application
 RUN npm run build
 
 # Production stage with nginx
