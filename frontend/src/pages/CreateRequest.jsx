@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { requestsApi, categoriesApi } from '../services/api';
-import { ArrowLeft, Send } from 'lucide-react';
+import { requestsApi, categoriesApi, attachmentsApi } from '../services/api';
+import { ArrowLeft, Send, Paperclip, X } from 'lucide-react';
 import EventForm from '../components/EventForm';
 import DynamicFormRenderer from '../components/DynamicFormRenderer';
 
@@ -16,6 +16,8 @@ const CreateRequest = () => {
     priority: 'medium',
     metadata: {}
   });
+  const [files, setFiles] = useState([]);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -47,13 +49,47 @@ const CreateRequest = () => {
           : 'New Event Request';
       }
 
+      // Create the ticket first
       const response = await requestsApi.create(submitData);
-      navigate(`/requests/${response.data.request.id}`);
+      const ticketId = response.data.request.id;
+
+      // Upload files if any
+      if (files.length > 0) {
+        setUploadingFiles(true);
+        for (const file of files) {
+          try {
+            await attachmentsApi.upload(ticketId, file);
+          } catch (uploadError) {
+            console.error('Failed to upload file:', file.name, uploadError);
+            // Continue with other files even if one fails
+          }
+        }
+      }
+
+      navigate(`/requests/${ticketId}`);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to create request');
     } finally {
       setLoading(false);
+      setUploadingFiles(false);
     }
+  };
+
+  const handleFileChange = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    setFiles(prevFiles => [...prevFiles, ...selectedFiles]);
+  };
+
+  const removeFile = (index) => {
+    setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
   const handleChange = (e) => {
@@ -263,6 +299,66 @@ const CreateRequest = () => {
               </>
             )}
 
+            {/* File Upload Section */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Attachments
+              </label>
+              <div className="space-y-3">
+                <div className="flex items-center justify-center w-full">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Paperclip className="w-8 h-8 mb-2 text-gray-400" />
+                      <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                        <span className="font-semibold">Click to upload</span> or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        PDF, Word, Excel, Images, ZIP (Max 5MB)
+                      </p>
+                    </div>
+                    <input
+                      type="file"
+                      className="hidden"
+                      multiple
+                      onChange={handleFileChange}
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.jpg,.jpeg,.png,.gif,.webp,.zip"
+                    />
+                  </label>
+                </div>
+
+                {/* File List */}
+                {files.length > 0 && (
+                  <div className="space-y-2">
+                    {files.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                      >
+                        <div className="flex items-center space-x-3 flex-1">
+                          <Paperclip className="w-4 h-4 text-gray-400" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                              {file.name}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {formatFileSize(file.size)}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeFile(index)}
+                          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-colors"
+                        >
+                          <X className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
               <button
                 type="button"
@@ -273,13 +369,13 @@ const CreateRequest = () => {
               </button>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || uploadingFiles}
                 className="btn-primary flex items-center"
               >
-                {loading ? (
+                {loading || uploadingFiles ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Creating...
+                    {uploadingFiles ? 'Uploading files...' : 'Creating...'}
                   </>
                 ) : (
                   <>

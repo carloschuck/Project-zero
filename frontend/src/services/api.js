@@ -16,6 +16,24 @@ export const ticketsApi = {
 // Alias for clearer usage in code
 export const requestsApi = ticketsApi;
 
+// Attachments
+export const attachmentsApi = {
+  upload: (ticketId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return axios.post(`${API_URL}/tickets/${ticketId}/attachments`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
+  getAll: (ticketId) => axios.get(`${API_URL}/tickets/${ticketId}/attachments`),
+  download: (attachmentId) => axios.get(`${API_URL}/attachments/${attachmentId}/download`, {
+    responseType: 'blob'
+  }),
+  delete: (attachmentId) => axios.delete(`${API_URL}/attachments/${attachmentId}`),
+};
+
 // Users
 export const usersApi = {
   getAll: (params) => axios.get(`${API_URL}/users`, { params }),
@@ -57,6 +75,7 @@ export default {
   categories: categoriesApi,
   notifications: notificationsApi,
   settings: settingsApi,
+  attachments: attachmentsApi,
 };
 
 

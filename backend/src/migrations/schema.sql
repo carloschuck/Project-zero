@@ -46,12 +46,13 @@ CREATE TABLE IF NOT EXISTS tickets (
 CREATE TABLE IF NOT EXISTS attachments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   ticket_id UUID NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
-  file_name VARCHAR(255) NOT NULL,
+  filename VARCHAR(255) NOT NULL,
+  original_filename VARCHAR(255) NOT NULL,
   file_path VARCHAR(500) NOT NULL,
   file_size INTEGER NOT NULL,
   mime_type VARCHAR(100),
   uploaded_by UUID NOT NULL REFERENCES users(id),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Comments table
@@ -152,6 +153,17 @@ INSERT INTO system_settings (setting_key, setting_value, setting_type, descripti
   ('org_support_email', 'support@example.com', 'string', 'Support contact email'),
   ('org_website', 'https://example.com', 'string', 'Organization website URL')
 ON CONFLICT (setting_key) DO NOTHING;
+
+-- Indexes for better query performance
+CREATE INDEX IF NOT EXISTS idx_tickets_user_id ON tickets(user_id);
+CREATE INDEX IF NOT EXISTS idx_tickets_category_id ON tickets(category_id);
+CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status);
+CREATE INDEX IF NOT EXISTS idx_tickets_assigned_to ON tickets(assigned_to);
+CREATE INDEX IF NOT EXISTS idx_attachments_ticket_id ON attachments(ticket_id);
+CREATE INDEX IF NOT EXISTS idx_attachments_uploaded_by ON attachments(uploaded_by);
+CREATE INDEX IF NOT EXISTS idx_comments_ticket_id ON comments(ticket_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_ticket_history_ticket_id ON ticket_history(ticket_id);
 
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
