@@ -13,11 +13,8 @@ RUN npm ci
 # Copy application files
 COPY . .
 
-# Accept build arg and set as environment variable for Vite
-ARG VITE_API_URL=http://localhost:5001/api
-ENV VITE_API_URL=$VITE_API_URL
-
-# Build the application
+# Build the application without specific API URL
+# API URL will be injected at runtime
 RUN npm run build
 
 # Production stage with nginx
