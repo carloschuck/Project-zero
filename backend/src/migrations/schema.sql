@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS categories (
   name VARCHAR(100) NOT NULL UNIQUE,
   description TEXT,
   department VARCHAR(100),
+  form_schema JSONB DEFAULT '[]',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -35,6 +36,7 @@ CREATE TABLE IF NOT EXISTS tickets (
   status VARCHAR(50) NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'in_progress', 'resolved', 'closed')),
   priority VARCHAR(50) DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
   assigned_to UUID REFERENCES users(id) ON DELETE SET NULL,
+  metadata JSONB DEFAULT '{}',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   resolved_at TIMESTAMP
@@ -90,6 +92,8 @@ CREATE INDEX IF NOT EXISTS idx_tickets_user_id ON tickets(user_id);
 CREATE INDEX IF NOT EXISTS idx_tickets_category_id ON tickets(category_id);
 CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status);
 CREATE INDEX IF NOT EXISTS idx_tickets_assigned_to ON tickets(assigned_to);
+CREATE INDEX IF NOT EXISTS idx_tickets_metadata ON tickets USING GIN (metadata);
+CREATE INDEX IF NOT EXISTS idx_categories_form_schema ON categories USING GIN (form_schema);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
 CREATE INDEX IF NOT EXISTS idx_comments_ticket_id ON comments(ticket_id);
@@ -101,6 +105,7 @@ INSERT INTO categories (name, description, department) VALUES
   ('Web Support', 'Website updates and maintenance', 'Web Development'),
   ('Video/Graphics', 'Video editing and graphic design requests', 'Creative'),
   ('Social Media', 'Social media content and management', 'Marketing'),
+  ('Events', 'Event planning and coordination requests', 'Events'),
   ('Other Requests', 'General requests and inquiries', 'General')
 ON CONFLICT (name) DO NOTHING;
 
