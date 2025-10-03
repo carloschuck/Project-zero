@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { usersApi } from '../services/api';
-import { Users as UsersIcon, Search, Plus, X, Edit, Key, UserX, UserCheck, MoreVertical } from 'lucide-react';
+import { Users as UsersIcon, Search, Plus, X, Edit, Key, UserX, UserCheck, MoreVertical, Trash2 } from 'lucide-react';
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -10,6 +10,7 @@ const Users = () => {
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [formData, setFormData] = useState({
@@ -144,6 +145,28 @@ const Users = () => {
       fetchUsers();
     } catch (error) {
       console.error('Failed to toggle user status:', error);
+    }
+  };
+
+  const handleDeleteUser = (user) => {
+    setSelectedUser(user);
+    setShowDeleteModal(true);
+    setOpenDropdown(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    setFormLoading(true);
+    setFormError('');
+
+    try {
+      await usersApi.delete(selectedUser.id);
+      setShowDeleteModal(false);
+      setSelectedUser(null);
+      fetchUsers();
+    } catch (error) {
+      setFormError(error.response?.data?.error || 'Failed to delete user');
+    } finally {
+      setFormLoading(false);
     }
   };
 
@@ -323,6 +346,13 @@ const Users = () => {
                                     Activate
                                   </>
                                 )}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteUser(user)}
+                                className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-2 text-red-600 dark:text-red-400"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Delete User
                               </button>
                             </div>
                           )}
@@ -664,6 +694,74 @@ const Users = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Delete User Confirmation Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-red-600 dark:text-red-400">
+                  Delete User
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setFormError('');
+                  }}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 dark:bg-red-900 rounded-full">
+                  <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 text-center mb-2">
+                  Are you sure you want to delete this user?
+                </p>
+                <p className="text-center text-gray-900 dark:text-white font-semibold">
+                  {selectedUser?.first_name} {selectedUser?.last_name}
+                </p>
+                <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+                  {selectedUser?.email}
+                </p>
+                <p className="text-sm text-red-600 dark:text-red-400 text-center mt-4">
+                  This action cannot be undone.
+                </p>
+              </div>
+
+              {formError && (
+                <div className="mb-4 p-3 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 rounded-lg text-sm">
+                  {formError}
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setFormError('');
+                  }}
+                  className="btn flex-1"
+                  disabled={formLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteConfirm}
+                  className="btn bg-red-600 hover:bg-red-700 text-white flex-1"
+                  disabled={formLoading}
+                >
+                  {formLoading ? 'Deleting...' : 'Delete User'}
+                </button>
+              </div>
             </div>
           </div>
         )}
