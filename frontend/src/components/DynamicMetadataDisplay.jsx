@@ -6,6 +6,29 @@ const DynamicMetadataDisplay = ({ metadata, schema }) => {
     return null;
   }
 
+  const renderFormattedValue = (rawValue) => {
+    if (rawValue === undefined || rawValue === null || rawValue === '') return null;
+
+    if (Array.isArray(rawValue)) {
+      // Render arrays as comma-separated values; stringify non-primitive entries
+      const formatted = rawValue
+        .map((item) => (typeof item === 'object' ? JSON.stringify(item) : String(item)))
+        .join(', ');
+      return formatted || null;
+    }
+
+    if (typeof rawValue === 'object') {
+      // Safely render objects as pretty-printed JSON
+      return (
+        <pre className="whitespace-pre-wrap break-words">
+          {JSON.stringify(rawValue, null, 2)}
+        </pre>
+      );
+    }
+
+    return String(rawValue);
+  };
+
   const renderFieldValue = (field) => {
     const value = metadata[field.id];
     
@@ -22,7 +45,7 @@ const DynamicMetadataDisplay = ({ metadata, schema }) => {
               {field.label}
             </p>
             <p className="text-base text-gray-900 dark:text-white whitespace-pre-wrap">
-              {value}
+              {renderFormattedValue(value)}
             </p>
           </div>
         );
@@ -34,7 +57,7 @@ const DynamicMetadataDisplay = ({ metadata, schema }) => {
               {field.label}
             </p>
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-              {value}
+              {renderFormattedValue(value)}
             </span>
           </div>
         );
@@ -69,7 +92,7 @@ const DynamicMetadataDisplay = ({ metadata, schema }) => {
               {field.label}
             </p>
             <p className="text-base text-gray-900 dark:text-white">
-              {value}
+              {renderFormattedValue(value)}
             </p>
           </div>
         );
