@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 const EventMetadataDisplay = ({ metadata }) => {
   if (!metadata || Object.keys(metadata).length === 0) return null;
 
-  const equipmentList = metadata.mediaEquipment ? 
+  const equipmentList = metadata.mediaEquipment && typeof metadata.mediaEquipment === 'object' ? 
     Object.entries(metadata.mediaEquipment)
       .filter(([_, value]) => value)
       .map(([key]) => key.charAt(0).toUpperCase() + key.slice(1))
@@ -39,7 +39,14 @@ const EventMetadataDisplay = ({ metadata }) => {
           <div>
             <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Event Date</p>
             <p className="text-base text-gray-900 dark:text-white">
-              {format(new Date(metadata.eventDate), 'MMMM d, yyyy')}
+              {(() => {
+                try {
+                  const date = new Date(metadata.eventDate);
+                  return isNaN(date.getTime()) ? metadata.eventDate : format(date, 'MMMM d, yyyy');
+                } catch (error) {
+                  return metadata.eventDate;
+                }
+              })()}
             </p>
           </div>
         )}

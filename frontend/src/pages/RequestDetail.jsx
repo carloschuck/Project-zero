@@ -315,7 +315,14 @@ const RequestDetail = () => {
                           </div>
                         </div>
                         <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {format(new Date(note.created_at), 'PPp')}
+                          {(() => {
+                            try {
+                              const date = new Date(note.created_at);
+                              return isNaN(date.getTime()) ? note.created_at : format(date, 'PPp');
+                            } catch (error) {
+                              return note.created_at;
+                            }
+                          })()}
                         </span>
                       </div>
                       <p className="text-gray-700 dark:text-gray-300 mt-2">
@@ -384,7 +391,14 @@ const RequestDetail = () => {
                             </div>
                           </div>
                           <span className="text-xs text-gray-500 dark:text-gray-400">
-                            {format(new Date(note.created_at), 'PPp')}
+                            {(() => {
+                              try {
+                                const date = new Date(note.created_at);
+                                return isNaN(date.getTime()) ? note.created_at : format(date, 'PPp');
+                              } catch (error) {
+                                return note.created_at;
+                              }
+                            })()}
                           </span>
                         </div>
                         <p className="text-gray-700 dark:text-gray-300 mt-2">
@@ -480,7 +494,14 @@ const RequestDetail = () => {
                   <div className="flex items-center">
                     <Calendar className="w-4 h-4 mr-2 text-gray-400" />
                     <span className="text-sm text-gray-900 dark:text-white">
-                      {format(new Date(request.created_at), 'PPp')}
+                      {(() => {
+                        try {
+                          const date = new Date(request.created_at);
+                          return isNaN(date.getTime()) ? request.created_at : format(date, 'PPp');
+                        } catch (error) {
+                          return request.created_at;
+                        }
+                      })()}
                     </span>
                   </div>
                 </div>
@@ -491,7 +512,14 @@ const RequestDetail = () => {
                     <div className="flex items-center">
                       <Calendar className="w-4 h-4 mr-2 text-gray-400" />
                       <span className="text-sm text-gray-900 dark:text-white">
-                        {format(new Date(request.updated_at), 'PPp')}
+                        {(() => {
+                          try {
+                            const date = new Date(request.updated_at);
+                            return isNaN(date.getTime()) ? request.updated_at : format(date, 'PPp');
+                          } catch (error) {
+                            return request.updated_at;
+                          }
+                        })()}
                       </span>
                     </div>
                   </div>

@@ -47,7 +47,14 @@ const DynamicMetadataDisplay = ({ metadata, schema }) => {
               {field.label}
             </p>
             <p className="text-base text-gray-900 dark:text-white">
-              {format(new Date(value), 'MMMM d, yyyy')}
+              {(() => {
+                try {
+                  const date = new Date(value);
+                  return isNaN(date.getTime()) ? value : format(date, 'MMMM d, yyyy');
+                } catch (error) {
+                  return value;
+                }
+              })()}
             </p>
           </div>
         );
@@ -100,7 +107,7 @@ const DynamicMetadataDisplay = ({ metadata, schema }) => {
       </h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {schema.map(field => renderFieldValue(field))}
+        {schema.map(field => renderFieldValue(field)).filter(Boolean)}
       </div>
     </div>
   );
