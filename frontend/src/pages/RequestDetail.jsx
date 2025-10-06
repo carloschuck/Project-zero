@@ -278,10 +278,10 @@ const RequestDetail = () => {
                 metadata={request.metadata} 
                 schema={category.form_schema} 
               />
-            ) : request.metadata && Object.keys(request.metadata).length > 0 && (
+            ) : request.metadata && Object.keys(request.metadata).length > 0 ? (
               /* Legacy Event Metadata */
               <EventMetadataDisplay metadata={request.metadata} />
-            )}
+            ) : null}
 
             {/* Additional Notes */}
             <div className="card">
