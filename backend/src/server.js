@@ -141,31 +141,35 @@ async function initializeDatabase() {
   try {
     console.log('🔍 Checking database schema...');
     
-    // First, check if main schema exists (check for users table)
-    const usersTableCheck = await pool.query(`
+    // Check if update_updated_at_column function exists
+    const functionCheck = await pool.query(`
       SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = 'users'
+        SELECT FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public' AND p.proname = 'update_updated_at_column'
       );
     `);
     
-    console.log(`📊 Users table exists: ${usersTableCheck.rows[0].exists}`);
+    console.log(`📊 update_updated_at_column function exists: ${functionCheck.rows[0].exists}`);
     
-    // If users table doesn't exist, run main schema first
-    if (!usersTableCheck.rows[0].exists) {
-      console.log('🔄 Main schema not found, running schema.sql migration...');
-      const fs = require('fs');
-      const path = require('path');
-      const schemaMigration = fs.readFileSync(
-        path.join(__dirname, 'migrations/schema.sql'),
-        'utf8'
-      );
-      await pool.query(schemaMigration);
-      console.log('✅ Main schema migration completed');
-    } else {
-      console.log('✅ Main schema already exists');
+    // If function doesn't exist, create it
+    if (!functionCheck.rows[0].exists) {
+      console.log('🔄 Creating update_updated_at_column function...');
+      await pool.query(`
+        CREATE OR REPLACE FUNCTION update_updated_at_column()
+        RETURNS TRIGGER AS $$
+        BEGIN
+           NEW.updated_at = CURRENT_TIMESTAMP;
+           RETURN NEW;
+        END;
+        $$ language 'plpgsql';
+      `);
+      console.log('✅ update_updated_at_column function created');
     }
+    
+    // Enable UUID extension if not already enabled
+    await pool.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
+    console.log('✅ UUID extension enabled');
     
     // Check if projects table exists
     const projectsTableCheck = await pool.query(`
