@@ -31,8 +31,10 @@ const generateProjectNumber = async (client) => {
 const createProject = async (req, res) => {
   const client = await pool.connect();
   try {
+    console.log('🔍 Starting project creation...');
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('❌ Validation errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
@@ -48,11 +50,13 @@ const createProject = async (req, res) => {
     } = req.body;
     
     const userId = req.user.id;
+    console.log('📝 Project data:', { title, description, priority, source, startDate, dueDate, ownerId, members, userId });
 
     await client.query('BEGIN');
 
     // Generate unique project number
     const projectNumber = await generateProjectNumber(client);
+    console.log('🔢 Generated project number:', projectNumber);
 
     // Create project
     const projectResult = await client.query(
@@ -63,6 +67,7 @@ const createProject = async (req, res) => {
     );
 
     const project = projectResult.rows[0];
+    console.log('✅ Project created successfully:', project.id);
 
     // Add creator as project owner member
     await client.query(
@@ -111,7 +116,14 @@ const createProject = async (req, res) => {
     });
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Create project error:', error);
+    console.error('❌ Create project error:', error);
+    console.error('❌ Error details:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      hint: error.hint,
+      stack: error.stack
+    });
     res.status(500).json({ error: 'Failed to create project' });
   } finally {
     client.release();
