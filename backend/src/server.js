@@ -64,6 +64,11 @@ app.post('/api/test-login', (req, res) => {
   res.json({ message: 'Login test endpoint working', body: req.body });
 });
 
+// Simple projects test endpoint
+app.get('/api/projects-test', (req, res) => {
+  res.json({ message: 'Projects test endpoint working' });
+});
+
 // Temporary migration endpoint for projects
 app.post('/api/migrate/projects', async (req, res) => {
   try {
