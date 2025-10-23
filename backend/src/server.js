@@ -54,6 +54,11 @@ app.get('/health', async (req, res) => {
   }
 });
 
+// Test endpoint
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'Test endpoint working' });
+});
+
 // Temporary migration endpoint for projects
 app.post('/api/migrate/projects', async (req, res) => {
   try {
