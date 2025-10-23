@@ -36,11 +36,11 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-500 to-primary-700 px-4">
+    <div className="min-h-screen flex items-center justify-center px-4">
       <div className="max-w-md w-full">
-        <div className="card">
+        <div className="glass-card glass-float">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-full mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600/90 backdrop-blur-md border border-primary-500/20 rounded-full mb-4 shadow-lg">
               <LogIn className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -52,7 +52,7 @@ const Login = () => {
           </div>
 
           {error && (
-            <div className="mb-4 p-4 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg">
+            <div className="mb-4 p-4 bg-red-100/80 dark:bg-red-900/40 border border-red-400/50 dark:border-red-800/50 text-red-700 dark:text-red-400 rounded-lg backdrop-blur-sm">
               {error}
             </div>
           )}

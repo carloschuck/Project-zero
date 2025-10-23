@@ -244,9 +244,9 @@ const Dashboard = () => {
           {statCards.map((stat) => {
             const Icon = stat.icon;
             return (
-              <div key={stat.name} className="card">
+              <div key={stat.name} className="glass-card glass-float">
                 <div className="flex items-center">
-                  <div className={`flex-shrink-0 p-3 rounded-lg ${stat.bgColor}`}>
+                  <div className={`flex-shrink-0 p-3 rounded-lg backdrop-blur-sm border border-white/20 dark:border-gray-700/30 ${stat.bgColor}`}>
                     <Icon className={`w-6 h-6 ${stat.textColor}`} />
                   </div>
                   <div className="ml-4">
@@ -264,7 +264,7 @@ const Dashboard = () => {
         </div>
 
         {/* Recent Requests */}
-        <div className="card">
+        <div className="glass-card">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">
               Recent Requests
@@ -287,7 +287,7 @@ const Dashboard = () => {
           </div>
 
           {/* Filters Section */}
-          <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+          <div className="mb-6 p-4 glass-light rounded-xl">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               {/* Search Input */}
               <div className="relative">
@@ -360,7 +360,7 @@ const Dashboard = () => {
 
           {/* Column Settings Dropdown */}
           {showColumnSettings && (
-            <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <div className="mb-4 p-4 glass-light rounded-xl">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
                 Toggle Columns
               </h3>
@@ -484,7 +484,7 @@ const Dashboard = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {recentRequests.map((request) => (
-                    <tr key={request.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <tr key={request.id} className="hover:bg-white/30 dark:hover:bg-gray-800/30 transition-all duration-200 backdrop-blur-sm">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Link
                           to={`/requests/${request.id}`}
@@ -536,14 +536,14 @@ const Dashboard = () => {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => handleAssign(request)}
-                              className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900 rounded-lg transition-colors"
+                              className="p-2 text-blue-600 hover:bg-blue-50/80 dark:hover:bg-blue-900/60 rounded-lg transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-blue-200/50 dark:hover:border-blue-700/50"
                               title="Assign"
                             >
                               <UserPlus className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleDelete(request.id)}
-                              className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors"
+                              className="p-2 text-red-600 hover:bg-red-50/80 dark:hover:bg-red-900/60 rounded-lg transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-red-200/50 dark:hover:border-red-700/50"
                               title="Delete"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -561,8 +561,8 @@ const Dashboard = () => {
 
         {/* Assign Modal */}
         {showAssignModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="glass-modal rounded-xl max-w-md w-full p-6">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                 Assign Request
               </h2>

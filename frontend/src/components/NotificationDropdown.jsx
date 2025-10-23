@@ -77,19 +77,19 @@ const NotificationDropdown = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={handleToggle}
-        className="relative p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        className="relative p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-white/50 dark:hover:bg-gray-800/50 transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-white/30 dark:hover:border-gray-700/30"
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
+          <span className="absolute top-1 right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600/90 backdrop-blur-md border border-red-500/20 rounded-full shadow-lg">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="absolute right-0 mt-2 w-80 glass-dropdown rounded-xl z-50">
+          <div className="flex items-center justify-between p-4 border-b border-white/20 dark:border-gray-700/30">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               Notifications
             </h3>
@@ -112,8 +112,8 @@ const NotificationDropdown = () => {
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer ${
-                    !notification.is_read ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                  className={`p-4 border-b border-white/20 dark:border-gray-700/30 hover:bg-white/50 dark:hover:bg-gray-800/50 cursor-pointer transition-all duration-200 backdrop-blur-sm ${
+                    !notification.is_read ? 'bg-blue-50/80 dark:bg-blue-900/30' : ''
                   }`}
                   onClick={() => !notification.is_read && handleMarkAsRead(notification.id)}
                 >
@@ -130,7 +130,7 @@ const NotificationDropdown = () => {
                       </p>
                     </div>
                     {!notification.is_read && (
-                      <div className="ml-2 w-2 h-2 bg-blue-600 rounded-full flex-shrink-0 mt-1" />
+                      <div className="ml-2 w-2 h-2 bg-blue-600/90 backdrop-blur-sm border border-blue-500/20 rounded-full flex-shrink-0 mt-1 shadow-sm" />
                     )}
                   </div>
                 </div>
