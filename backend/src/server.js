@@ -141,8 +141,34 @@ async function initializeDatabase() {
   try {
     console.log('🔍 Checking database schema...');
     
+    // First, check if main schema exists (check for users table)
+    const usersTableCheck = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'users'
+      );
+    `);
+    
+    console.log(`📊 Users table exists: ${usersTableCheck.rows[0].exists}`);
+    
+    // If users table doesn't exist, run main schema first
+    if (!usersTableCheck.rows[0].exists) {
+      console.log('🔄 Main schema not found, running schema.sql migration...');
+      const fs = require('fs');
+      const path = require('path');
+      const schemaMigration = fs.readFileSync(
+        path.join(__dirname, 'migrations/schema.sql'),
+        'utf8'
+      );
+      await pool.query(schemaMigration);
+      console.log('✅ Main schema migration completed');
+    } else {
+      console.log('✅ Main schema already exists');
+    }
+    
     // Check if projects table exists
-    const result = await pool.query(`
+    const projectsTableCheck = await pool.query(`
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
         WHERE table_schema = 'public' 
@@ -150,10 +176,10 @@ async function initializeDatabase() {
       );
     `);
     
-    console.log(`📊 Projects table exists: ${result.rows[0].exists}`);
+    console.log(`📊 Projects table exists: ${projectsTableCheck.rows[0].exists}`);
     
-    if (!result.rows[0].exists) {
-      console.log('🔄 Projects table not found, running migration...');
+    if (!projectsTableCheck.rows[0].exists) {
+      console.log('🔄 Projects table not found, running projects migration...');
       const fs = require('fs');
       const path = require('path');
       const projectsMigration = fs.readFileSync(
