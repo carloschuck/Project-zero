@@ -120,7 +120,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/settings', settingsRoutes);
-// app.use('/api/projects', projectRoutes);
+app.use('/api/projects', projectRoutes);
 app.use('/api', attachmentRoutes);
 
 // 404 handler
