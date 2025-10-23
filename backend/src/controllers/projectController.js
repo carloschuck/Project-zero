@@ -56,19 +56,19 @@ const createProject = async (req, res) => {
 
     // Create project
     const projectResult = await client.query(
-      `INSERT INTO projects (project_number, title, description, priority, source, start_date, due_date, owner_id, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO projects (project_number, title, description, priority, source, start_date, due_date, owner_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [projectNumber, title, description, priority || 'medium', source || 'meeting', startDate, dueDate, ownerId || userId, userId]
+      [projectNumber, title, description, priority || 'medium', source || 'meeting', startDate, dueDate, ownerId || userId]
     );
 
     const project = projectResult.rows[0];
 
     // Add creator as project owner member
     await client.query(
-      `INSERT INTO project_members (project_id, user_id, role, added_by)
-       VALUES ($1, $2, 'owner', $3)`,
-      [project.id, ownerId || userId, userId]
+      `INSERT INTO project_members (project_id, user_id, role)
+       VALUES ($1, $2, 'owner')`,
+      [project.id, ownerId || userId]
     );
 
     // Add additional members if provided
@@ -76,10 +76,10 @@ const createProject = async (req, res) => {
       for (const memberId of members) {
         if (memberId !== (ownerId || userId)) {
           await client.query(
-            `INSERT INTO project_members (project_id, user_id, role, added_by)
-             VALUES ($1, $2, 'collaborator', $3)
+            `INSERT INTO project_members (project_id, user_id, role)
+             VALUES ($1, $2, 'collaborator')
              ON CONFLICT (project_id, user_id) DO NOTHING`,
-            [project.id, memberId, userId]
+            [project.id, memberId]
           );
 
           // Notify new member
@@ -277,13 +277,9 @@ const getProjectById = async (req, res) => {
         p.*,
         u.first_name as owner_first_name,
         u.last_name as owner_last_name,
-        u.email as owner_email,
-        c.first_name as creator_first_name,
-        c.last_name as creator_last_name,
-        c.email as creator_email
+        u.email as owner_email
       FROM projects p
       JOIN users u ON p.owner_id = u.id
-      JOIN users c ON p.created_by = c.id
       WHERE p.id = $1`,
       [id]
     );
