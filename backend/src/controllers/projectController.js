@@ -282,6 +282,7 @@ const getProjects = async (req, res) => {
 const getProjectById = async (req, res) => {
   try {
     const { id } = req.params;
+    console.log('🔍 Fetching project with ID:', id);
 
     // Get project details
     const projectResult = await pool.query(
@@ -301,8 +302,11 @@ const getProjectById = async (req, res) => {
     );
 
     if (projectResult.rows.length === 0) {
+      console.log('❌ Project not found with ID:', id);
       return res.status(404).json({ error: 'Project not found' });
     }
+    
+    console.log('✅ Project found:', projectResult.rows[0].id);
 
     const project = projectResult.rows[0];
 
@@ -408,7 +412,14 @@ const getProjectById = async (req, res) => {
       history: historyResult.rows
     });
   } catch (error) {
-    console.error('Get project error:', error);
+    console.error('❌ Get project error:', error);
+    console.error('❌ Error details:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      hint: error.hint,
+      stack: error.stack
+    });
     res.status(500).json({ error: 'Failed to fetch project' });
   }
 };
