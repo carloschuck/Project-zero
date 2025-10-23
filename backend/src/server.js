@@ -139,6 +139,8 @@ app.use((err, req, res, next) => {
 // Auto-run migrations on startup
 async function initializeDatabase() {
   try {
+    console.log('🔍 Checking database schema...');
+    
     // Check if projects table exists
     const result = await pool.query(`
       SELECT EXISTS (
@@ -147,6 +149,8 @@ async function initializeDatabase() {
         AND table_name = 'projects'
       );
     `);
+    
+    console.log(`📊 Projects table exists: ${result.rows[0].exists}`);
     
     if (!result.rows[0].exists) {
       console.log('🔄 Projects table not found, running migration...');
@@ -159,24 +163,33 @@ async function initializeDatabase() {
       await pool.query(projectsMigration);
       console.log('✅ Projects migration completed');
     } else {
-      // Check if project_id column exists in notifications table
-      const columnCheck = await pool.query(`
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'notifications' AND column_name = 'project_id'
-      `);
-      
-      if (columnCheck.rows.length === 0) {
-        console.log('🔄 Adding project_id column to notifications...');
-        await pool.query(`
-          ALTER TABLE notifications 
-          ADD COLUMN project_id UUID REFERENCES projects(id) ON DELETE CASCADE
-        `);
-        console.log('✅ Notifications table updated');
-      }
+      console.log('✅ Projects table already exists');
     }
+    
+    // Check if project_id column exists in notifications table
+    const columnCheck = await pool.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'notifications' AND column_name = 'project_id'
+    `);
+    
+    console.log(`📊 project_id column in notifications: ${columnCheck.rows.length > 0 ? 'exists' : 'missing'}`);
+    
+    if (columnCheck.rows.length === 0) {
+      console.log('🔄 Adding project_id column to notifications...');
+      await pool.query(`
+        ALTER TABLE notifications 
+        ADD COLUMN project_id UUID REFERENCES projects(id) ON DELETE CASCADE
+      `);
+      console.log('✅ Notifications table updated with project_id column');
+    } else {
+      console.log('✅ project_id column already exists');
+    }
+    
+    console.log('🎉 Database initialization completed successfully');
   } catch (error) {
-    console.error('⚠️  Database initialization warning:', error.message);
+    console.error('❌ Database initialization error:', error);
+    console.error('Stack trace:', error.stack);
   }
 }
 
