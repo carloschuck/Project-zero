@@ -8,16 +8,16 @@ require('dotenv').config();
 const pool = require('./config/database');
 const { initEmailTransporter } = require('./utils/email');
 
-// Import routes - Temporarily disabled to isolate issues
-// const authRoutes = require('./routes/auth');
-// const ticketRoutes = require('./routes/tickets');
-// const userRoutes = require('./routes/users');
-// const notificationRoutes = require('./routes/notifications');
-// const categoryRoutes = require('./routes/categories');
-// const settingsRoutes = require('./routes/settings');
-// const migrateRoutes = require('./routes/migrate');
-// const attachmentRoutes = require('./routes/attachments');
-// const projectRoutes = require('./routes/projects');
+// Import routes
+const authRoutes = require('./routes/auth');
+const ticketRoutes = require('./routes/tickets');
+const userRoutes = require('./routes/users');
+const notificationRoutes = require('./routes/notifications');
+const categoryRoutes = require('./routes/categories');
+const settingsRoutes = require('./routes/settings');
+const migrateRoutes = require('./routes/migrate');
+const attachmentRoutes = require('./routes/attachments');
+const projectRoutes = require('./routes/projects');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -99,18 +99,18 @@ app.post('/api/migrate/projects', async (req, res) => {
   }
 });
 
-// API routes - Temporarily disabled to isolate issues
-// app.use('/api/migrate', migrateRoutes);
-// app.use('/api/auth/login', authLimiter);
-// app.use('/api/auth/register', authLimiter);
-// app.use('/api/auth', authRoutes);
-// app.use('/api/tickets', ticketRoutes);
-// app.use('/api/users', userRoutes);
-// app.use('/api/notifications', notificationRoutes);
-// app.use('/api/categories', categoryRoutes);
-// app.use('/api/settings', settingsRoutes);
-// app.use('/api/projects', projectRoutes);
-// app.use('/api', attachmentRoutes);
+// API routes
+app.use('/api/migrate', migrateRoutes);
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/auth', authRoutes);
+app.use('/api/tickets', ticketRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api', attachmentRoutes);
 
 // 404 handler
 app.use((req, res) => {
