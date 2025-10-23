@@ -45,7 +45,7 @@ const authLimiter = rateLimit({
 });
 
 // Health check
-app.get('/health', async (req, res) => {
+app.get('/api/health', async (req, res) => {
   try {
     await pool.query('SELECT 1');
     res.json({ status: 'healthy', database: 'connected' });
