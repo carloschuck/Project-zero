@@ -56,10 +56,10 @@ const createProject = async (req, res) => {
 
     // Create project
     const projectResult = await client.query(
-      `INSERT INTO projects (project_number, title, description, priority, source, start_date, due_date, owner_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO projects (project_number, title, description, priority, source, start_date, due_date, owner_id, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
-      [projectNumber, title, description, priority || 'medium', source || 'meeting', startDate, dueDate, ownerId || userId]
+      [projectNumber, title, description, priority || 'medium', source || 'meeting', startDate, dueDate, ownerId || userId, userId]
     );
 
     const project = projectResult.rows[0];
@@ -277,9 +277,13 @@ const getProjectById = async (req, res) => {
         p.*,
         u.first_name as owner_first_name,
         u.last_name as owner_last_name,
-        u.email as owner_email
+        u.email as owner_email,
+        c.first_name as creator_first_name,
+        c.last_name as creator_last_name,
+        c.email as creator_email
       FROM projects p
       JOIN users u ON p.owner_id = u.id
+      LEFT JOIN users c ON p.created_by = c.id
       WHERE p.id = $1`,
       [id]
     );
