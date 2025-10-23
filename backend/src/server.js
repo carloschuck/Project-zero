@@ -44,8 +44,8 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Health check
-app.get('/api/health', async (req, res) => {
+// Health check (needs to be at root level for DigitalOcean health checks)
+app.get('/health', async (req, res) => {
   try {
     await pool.query('SELECT 1');
     res.json({ status: 'healthy', database: 'connected' });
