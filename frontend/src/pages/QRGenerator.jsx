@@ -28,8 +28,7 @@ const QRGenerator = () => {
 
   // URL form state
   const [urlData, setUrlData] = useState({
-    url: '',
-    title: ''
+    url: ''
   });
 
   // Text form state
@@ -172,7 +171,7 @@ const QRGenerator = () => {
   const clearAll = () => {
     setQrCodeData('');
     setQrCodeImage('');
-    setUrlData({ url: '', title: '' });
+    setUrlData({ url: '' });
     setTextData('');
     setContactData({
       firstName: '',
@@ -261,18 +260,6 @@ const QRGenerator = () => {
                     className="input"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Title (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={urlData.title}
-                    onChange={(e) => setUrlData({ ...urlData, title: e.target.value })}
-                    placeholder="My Website"
-                    className="input"
-                  />
-                </div>
                 <button
                   onClick={generateURLQR}
                   disabled={isGenerating}
@@ -340,7 +327,6 @@ const QRGenerator = () => {
                       type="text"
                       value={contactData.firstName}
                       onChange={(e) => setContactData({ ...contactData, firstName: e.target.value })}
-                      placeholder="John"
                       className="input"
                     />
                   </div>
@@ -352,7 +338,6 @@ const QRGenerator = () => {
                       type="text"
                       value={contactData.lastName}
                       onChange={(e) => setContactData({ ...contactData, lastName: e.target.value })}
-                      placeholder="Doe"
                       className="input"
                     />
                   </div>
@@ -367,7 +352,6 @@ const QRGenerator = () => {
                     type="email"
                     value={contactData.email}
                     onChange={(e) => setContactData({ ...contactData, email: e.target.value })}
-                    placeholder="john@example.com"
                     className="input"
                   />
                 </div>
@@ -381,7 +365,6 @@ const QRGenerator = () => {
                     type="tel"
                     value={contactData.phone}
                     onChange={(e) => setContactData({ ...contactData, phone: e.target.value })}
-                    placeholder="+1 (555) 123-4567"
                     className="input"
                   />
                 </div>
@@ -396,7 +379,6 @@ const QRGenerator = () => {
                       type="text"
                       value={contactData.organization}
                       onChange={(e) => setContactData({ ...contactData, organization: e.target.value })}
-                      placeholder="Company Inc."
                       className="input"
                     />
                   </div>
@@ -408,7 +390,6 @@ const QRGenerator = () => {
                       type="text"
                       value={contactData.title}
                       onChange={(e) => setContactData({ ...contactData, title: e.target.value })}
-                      placeholder="Software Engineer"
                       className="input"
                     />
                   </div>
@@ -423,7 +404,6 @@ const QRGenerator = () => {
                     type="text"
                     value={contactData.address}
                     onChange={(e) => setContactData({ ...contactData, address: e.target.value })}
-                    placeholder="123 Main St, City, State"
                     className="input"
                   />
                 </div>
@@ -437,7 +417,6 @@ const QRGenerator = () => {
                     type="url"
                     value={contactData.website}
                     onChange={(e) => setContactData({ ...contactData, website: e.target.value })}
-                    placeholder="https://example.com"
                     className="input"
                   />
                 </div>
@@ -535,26 +514,6 @@ const QRGenerator = () => {
           </div>
         </div>
 
-        {/* Usage Tips */}
-        <div className="glass-card">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            💡 Usage Tips
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 dark:text-gray-400">
-            <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-2">URL QR Codes</h4>
-              <p>Perfect for sharing websites, landing pages, or social media profiles. Great for business cards and marketing materials.</p>
-            </div>
-            <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-2">Text QR Codes</h4>
-              <p>Encode any text content like messages, instructions, or notes. Useful for quick information sharing.</p>
-            </div>
-            <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-2">Contact QR Codes</h4>
-              <p>Create vCard QR codes that automatically add contact information to smartphones. Perfect for networking events.</p>
-            </div>
-          </div>
-        </div>
       </div>
     </Layout>
   );
