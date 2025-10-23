@@ -136,13 +136,60 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Auto-run migrations on startup
+async function initializeDatabase() {
+  try {
+    // Check if projects table exists
+    const result = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'projects'
+      );
+    `);
+    
+    if (!result.rows[0].exists) {
+      console.log('🔄 Projects table not found, running migration...');
+      const fs = require('fs');
+      const path = require('path');
+      const projectsMigration = fs.readFileSync(
+        path.join(__dirname, 'migrations/add_projects.sql'),
+        'utf8'
+      );
+      await pool.query(projectsMigration);
+      console.log('✅ Projects migration completed');
+    } else {
+      // Check if project_id column exists in notifications table
+      const columnCheck = await pool.query(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'notifications' AND column_name = 'project_id'
+      `);
+      
+      if (columnCheck.rows.length === 0) {
+        console.log('🔄 Adding project_id column to notifications...');
+        await pool.query(`
+          ALTER TABLE notifications 
+          ADD COLUMN project_id UUID REFERENCES projects(id) ON DELETE CASCADE
+        `);
+        console.log('✅ Notifications table updated');
+      }
+    }
+  } catch (error) {
+    console.error('⚠️  Database initialization warning:', error.message);
+  }
+}
+
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 API: http://localhost:${PORT}`);
   console.log(`🗄️  Database: ${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`);
   console.log(`👤 Database User: ${process.env.DB_USER}`);
+  
+  // Run database initialization
+  await initializeDatabase();
 });
 
 // Graceful shutdown
