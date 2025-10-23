@@ -57,5 +57,43 @@ router.post('/run', async (req, res) => {
   }
 });
 
+// Projects migration endpoint
+// Call this to add the projects feature tables
+router.post('/projects', async (req, res) => {
+  try {
+    console.log('🗄️  Starting projects migration...');
+
+    // Read and execute the projects migration
+    const projectsMigrationPath = path.join(__dirname, '../migrations/add_projects.sql');
+    const projectsMigration = await fs.readFile(projectsMigrationPath, 'utf8');
+    
+    await pool.query(projectsMigration);
+    console.log('✅ Projects tables created');
+
+    res.json({
+      success: true,
+      message: 'Projects migration completed successfully!',
+      tables: ['projects', 'project_tasks', 'project_members', 'project_comments', 'project_history']
+    });
+
+  } catch (error) {
+    console.error('❌ Projects migration failed:', error);
+    
+    // If tables already exist, that's okay
+    if (error.code === '42P07') {
+      res.json({
+        success: true,
+        message: 'Projects tables already exist',
+        note: 'Migration already completed'
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+});
+
 module.exports = router;
 
