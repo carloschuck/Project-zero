@@ -385,7 +385,7 @@ const getProjectById = async (req, res) => {
       FROM attachments a
       JOIN users u ON a.uploaded_by = u.id
       WHERE a.project_id = $1
-      ORDER BY a.uploaded_at DESC`,
+      ORDER BY a.id DESC`,
       [id]
     );
 
