@@ -13,6 +13,7 @@ import Categories from './pages/Categories';
 import Analytics from './pages/Analytics';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import QRGenerator from './pages/QRGenerator';
 
 // Protected route component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -51,6 +52,15 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/qr-generator"
+              element={
+                <ProtectedRoute>
+                  <QRGenerator />
                 </ProtectedRoute>
               }
             />

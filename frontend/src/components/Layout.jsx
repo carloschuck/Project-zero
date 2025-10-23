@@ -21,6 +21,7 @@ import {
   BarChart3,
   PanelLeftClose,
   PanelLeftOpen,
+  QrCode,
 } from 'lucide-react';
 import NotificationDropdown from './NotificationDropdown';
 
@@ -49,6 +50,12 @@ const Layout = ({ children }) => {
       name: 'Dashboard', 
       href: '/dashboard', 
       icon: Home, 
+      roles: ['admin', 'user', 'department_lead', 'event_coordinator'] 
+    },
+    { 
+      name: 'QR Generator', 
+      href: '/qr-generator', 
+      icon: QrCode, 
       roles: ['admin', 'user', 'department_lead', 'event_coordinator'] 
     },
     { 
