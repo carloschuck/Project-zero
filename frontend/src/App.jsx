@@ -8,6 +8,9 @@ import Dashboard from './pages/Dashboard';
 import Requests from './pages/Requests';
 import RequestDetail from './pages/RequestDetail';
 import CreateRequest from './pages/CreateRequest';
+import Projects from './pages/Projects';
+import ProjectDetail from './pages/ProjectDetail';
+import CreateProject from './pages/CreateProject';
 import Users from './pages/Users';
 import Categories from './pages/Categories';
 import Analytics from './pages/Analytics';
@@ -88,6 +91,33 @@ function App() {
               element={
                 <ProtectedRoute>
                   <RequestDetail />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/projects"
+              element={
+                <ProtectedRoute>
+                  <Projects />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/projects/new"
+              element={
+                <ProtectedRoute>
+                  <CreateProject />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/projects/:id"
+              element={
+                <ProtectedRoute>
+                  <ProjectDetail />
                 </ProtectedRoute>
               }
             />

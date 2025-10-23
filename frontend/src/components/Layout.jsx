@@ -22,6 +22,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   QrCode,
+  Briefcase,
 } from 'lucide-react';
 import NotificationDropdown from './NotificationDropdown';
 
@@ -50,6 +51,12 @@ const Layout = ({ children }) => {
       name: 'Dashboard', 
       href: '/dashboard', 
       icon: Home, 
+      roles: ['admin', 'user', 'department_lead', 'event_coordinator'] 
+    },
+    { 
+      name: 'Projects', 
+      href: '/projects', 
+      icon: Briefcase, 
       roles: ['admin', 'user', 'department_lead', 'event_coordinator'] 
     },
     { 

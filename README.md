@@ -68,6 +68,18 @@ A comprehensive ticketing system designed for organizations to manage internal r
 - **Assignment** - Assign tickets to specific staff members
 - **History Tracking** - Complete audit trail of all changes
 
+### 📁 Project Management (NEW)
+- **Project Tracking** - Track projects from meetings, emails, texts, and phone calls
+- **Task Checklists** - Create and manage tasks within projects with progress tracking
+- **Team Collaboration** - Add team members with role-based permissions (Owner, Collaborator, Viewer)
+- **File Attachments** - Share documents and files with the team
+- **Source Tracking** - Tag projects by origin (Meeting, Email, Text, Phone, Other)
+- **Project Status** - Planning, In Progress, On Hold, Completed, Cancelled
+- **Comments & Updates** - Team discussion thread for collaboration
+- **Member Management** - Add/remove team members with different access levels
+- **Deadline Tracking** - Set start dates and due dates with visual progress
+- **Statistics Dashboard** - Overview of all project statuses and overdue items
+
 ### 📊 Analytics & Reporting
 - **Turnaround Time Analysis** - Average, median, min, max resolution times
 - **Category Performance** - Track performance by request category

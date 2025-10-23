@@ -69,6 +69,38 @@ export const settingsApi = {
   sendTestTemplate: (data) => axios.post(`${API_URL}/settings/test-template`, data),
 };
 
+// Projects
+export const projectsApi = {
+  getAll: (params) => axios.get(`${API_URL}/projects`, { params }),
+  getById: (id) => axios.get(`${API_URL}/projects/${id}`),
+  create: (data) => axios.post(`${API_URL}/projects`, data),
+  update: (id, data) => axios.put(`${API_URL}/projects/${id}`, data),
+  delete: (id) => axios.delete(`${API_URL}/projects/${id}`),
+  getStats: () => axios.get(`${API_URL}/projects/stats`),
+  addComment: (id, data) => axios.post(`${API_URL}/projects/${id}/comments`, data),
+  
+  // Tasks
+  createTask: (projectId, data) => axios.post(`${API_URL}/projects/${projectId}/tasks`, data),
+  updateTask: (projectId, taskId, data) => axios.put(`${API_URL}/projects/${projectId}/tasks/${taskId}`, data),
+  deleteTask: (projectId, taskId) => axios.delete(`${API_URL}/projects/${projectId}/tasks/${taskId}`),
+  
+  // Members
+  addMember: (projectId, data) => axios.post(`${API_URL}/projects/${projectId}/members`, data),
+  removeMember: (projectId, memberId) => axios.delete(`${API_URL}/projects/${projectId}/members/${memberId}`),
+  
+  // Attachments
+  uploadAttachment: (projectId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('entity_type', 'project');
+    return axios.post(`${API_URL}/projects/${projectId}/attachments`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
+};
+
 export default {
   tickets: ticketsApi,
   users: usersApi,
@@ -76,6 +108,7 @@ export default {
   notifications: notificationsApi,
   settings: settingsApi,
   attachments: attachmentsApi,
+  projects: projectsApi,
 };
 
 

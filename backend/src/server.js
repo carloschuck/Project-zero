@@ -17,6 +17,7 @@ const categoryRoutes = require('./routes/categories');
 const settingsRoutes = require('./routes/settings');
 const migrateRoutes = require('./routes/migrate');
 const attachmentRoutes = require('./routes/attachments');
+const projectRoutes = require('./routes/projects');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -63,6 +64,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/projects', projectRoutes);
 app.use('/api', attachmentRoutes);
 
 // 404 handler

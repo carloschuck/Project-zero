@@ -39,5 +39,13 @@ router.delete(
   deleteAttachment
 );
 
+// Upload attachment to a project
+router.post(
+  '/projects/:projectId/attachments',
+  authenticateToken,
+  upload.single('file'),
+  uploadAttachment
+);
+
 module.exports = router;
 

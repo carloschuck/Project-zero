@@ -4,46 +4,72 @@ const fs = require('fs');
 
 const uploadAttachment = async (req, res) => {
   try {
-    const { ticketId } = req.params;
+    const { ticketId, projectId } = req.params;
     const file = req.file;
+    const entityType = req.body.entity_type || 'ticket';
 
     if (!file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    // Verify ticket exists and user has access
-    const ticketResult = await pool.query(
-      `SELECT id, user_id FROM tickets WHERE id = $1`,
-      [ticketId]
-    );
+    let canAddAttachment = false;
 
-    if (ticketResult.rows.length === 0) {
-      // Delete uploaded file if ticket doesn't exist
+    if (ticketId) {
+      // Verify ticket exists and user has access
+      const ticketResult = await pool.query(
+        `SELECT id, user_id FROM tickets WHERE id = $1`,
+        [ticketId]
+      );
+
+      if (ticketResult.rows.length === 0) {
+        fs.unlinkSync(file.path);
+        return res.status(404).json({ error: 'Ticket not found' });
+      }
+
+      const ticket = ticketResult.rows[0];
+      canAddAttachment = 
+        ticket.user_id === req.user.id || 
+        req.user.role === 'admin' || 
+        req.user.role === 'department_lead';
+    } else if (projectId) {
+      // Verify project exists and user has access
+      const projectResult = await pool.query(
+        `SELECT p.id, p.owner_id, pm.user_id as member_id
+         FROM projects p
+         LEFT JOIN project_members pm ON p.id = pm.project_id AND pm.user_id = $1
+         WHERE p.id = $2`,
+        [req.user.id, projectId]
+      );
+
+      if (projectResult.rows.length === 0) {
+        fs.unlinkSync(file.path);
+        return res.status(404).json({ error: 'Project not found' });
+      }
+
+      const project = projectResult.rows[0];
+      canAddAttachment = 
+        project.owner_id === req.user.id || 
+        project.member_id !== null ||
+        req.user.role === 'admin';
+    } else {
       fs.unlinkSync(file.path);
-      return res.status(404).json({ error: 'Ticket not found' });
+      return res.status(400).json({ error: 'Either ticketId or projectId is required' });
     }
-
-    const ticket = ticketResult.rows[0];
-
-    // Check if user has permission to add attachments
-    // User can add if they're the ticket owner, admin, or department_lead
-    const canAddAttachment = 
-      ticket.user_id === req.user.id || 
-      req.user.role === 'admin' || 
-      req.user.role === 'department_lead';
 
     if (!canAddAttachment) {
       fs.unlinkSync(file.path);
-      return res.status(403).json({ error: 'You do not have permission to add attachments to this ticket' });
+      return res.status(403).json({ error: 'You do not have permission to add attachments' });
     }
 
     // Save attachment info to database
     const result = await pool.query(
-      `INSERT INTO attachments (ticket_id, filename, original_filename, file_path, file_size, mime_type, uploaded_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO attachments (ticket_id, project_id, entity_type, filename, original_filename, file_path, file_size, mime_type, uploaded_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
       [
-        ticketId,
+        ticketId || null,
+        projectId || null,
+        entityType,
         file.filename,
         file.originalname,
         file.path,
@@ -122,11 +148,16 @@ const downloadAttachment = async (req, res) => {
     const { attachmentId } = req.params;
 
     const result = await pool.query(
-      `SELECT a.*, t.user_id, t.id as ticket_id
+      `SELECT a.*, 
+        t.user_id as ticket_user_id,
+        p.owner_id as project_owner_id,
+        pm.user_id as project_member_id
        FROM attachments a
-       JOIN tickets t ON a.ticket_id = t.id
-       WHERE a.id = $1`,
-      [attachmentId]
+       LEFT JOIN tickets t ON a.ticket_id = t.id
+       LEFT JOIN projects p ON a.project_id = p.id
+       LEFT JOIN project_members pm ON p.id = pm.project_id AND pm.user_id = $1
+       WHERE a.id = $2`,
+      [req.user.id, attachmentId]
     );
 
     if (result.rows.length === 0) {
@@ -136,11 +167,17 @@ const downloadAttachment = async (req, res) => {
     const attachment = result.rows[0];
 
     // Check if user has permission to download
-    const canDownload = 
-      attachment.user_id === req.user.id || 
-      req.user.role === 'admin' || 
-      req.user.role === 'department_lead' ||
-      req.user.role === 'event_coordinator';
+    let canDownload = req.user.role === 'admin' || 
+                      req.user.role === 'department_lead' ||
+                      req.user.role === 'event_coordinator';
+    
+    if (!canDownload && attachment.ticket_user_id) {
+      canDownload = attachment.ticket_user_id === req.user.id;
+    }
+    
+    if (!canDownload && attachment.project_owner_id) {
+      canDownload = attachment.project_owner_id === req.user.id || attachment.project_member_id !== null;
+    }
 
     if (!canDownload) {
       return res.status(403).json({ error: 'You do not have permission to download this attachment' });
@@ -173,9 +210,10 @@ const deleteAttachment = async (req, res) => {
     const { attachmentId } = req.params;
 
     const result = await pool.query(
-      `SELECT a.*, t.user_id
+      `SELECT a.*,
+        p.owner_id as project_owner_id
        FROM attachments a
-       JOIN tickets t ON a.ticket_id = t.id
+       LEFT JOIN projects p ON a.project_id = p.id
        WHERE a.id = $1`,
       [attachmentId]
     );
@@ -186,9 +224,10 @@ const deleteAttachment = async (req, res) => {
 
     const attachment = result.rows[0];
 
-    // Only uploader or admin can delete
+    // Only uploader, project owner, or admin can delete
     const canDelete = 
       attachment.uploaded_by === req.user.id || 
+      attachment.project_owner_id === req.user.id ||
       req.user.role === 'admin';
 
     if (!canDelete) {
