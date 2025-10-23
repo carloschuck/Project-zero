@@ -110,7 +110,7 @@ app.post('/api/migrate/projects', async (req, res) => {
   }
 });
 
-// API routes
+// API routes (with /api prefix)
 app.use('/api/migrate', migrateRoutes);
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
@@ -122,6 +122,19 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api', attachmentRoutes);
+
+// API routes (without /api prefix - for DigitalOcean ingress)
+app.use('/migrate', migrateRoutes);
+app.use('/auth/login', authLimiter);
+app.use('/auth/register', authLimiter);
+app.use('/auth', authRoutes);
+app.use('/tickets', ticketRoutes);
+app.use('/users', userRoutes);
+app.use('/notifications', notificationRoutes);
+app.use('/categories', categoryRoutes);
+app.use('/settings', settingsRoutes);
+app.use('/projects', projectRoutes);
+app.use('/', attachmentRoutes);
 
 // 404 handler
 app.use((req, res) => {
