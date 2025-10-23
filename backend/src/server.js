@@ -15,9 +15,9 @@ const userRoutes = require('./routes/users');
 const notificationRoutes = require('./routes/notifications');
 const categoryRoutes = require('./routes/categories');
 const settingsRoutes = require('./routes/settings');
-const migrateRoutes = require('./routes/migrate');
+// const migrateRoutes = require('./routes/migrate'); // Temporarily disabled
 const attachmentRoutes = require('./routes/attachments');
-const projectRoutes = require('./routes/projects');
+// const projectRoutes = require('./routes/projects'); // Temporarily disabled
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -100,7 +100,7 @@ app.post('/api/migrate/projects', async (req, res) => {
 });
 
 // API routes
-app.use('/api/migrate', migrateRoutes); // One-time migration endpoint
+// app.use('/api/migrate', migrateRoutes); // Temporarily disabled
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 app.use('/api/auth', authRoutes);
@@ -109,7 +109,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/settings', settingsRoutes);
-app.use('/api/projects', projectRoutes);
+// app.use('/api/projects', projectRoutes); // Temporarily disabled
 app.use('/api', attachmentRoutes);
 
 // 404 handler
