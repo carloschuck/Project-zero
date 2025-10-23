@@ -71,9 +71,9 @@ const createProject = async (req, res) => {
 
     // Add creator as project owner member
     await client.query(
-      `INSERT INTO project_members (project_id, user_id, role)
-       VALUES ($1, $2, 'owner')`,
-      [project.id, ownerId || userId]
+      `INSERT INTO project_members (project_id, user_id, role, added_by)
+       VALUES ($1, $2, 'owner', $3)`,
+      [project.id, ownerId || userId, userId]
     );
 
     // Add additional members if provided
@@ -81,10 +81,10 @@ const createProject = async (req, res) => {
       for (const memberId of members) {
         if (memberId !== (ownerId || userId)) {
           await client.query(
-            `INSERT INTO project_members (project_id, user_id, role)
-             VALUES ($1, $2, 'collaborator')
+            `INSERT INTO project_members (project_id, user_id, role, added_by)
+             VALUES ($1, $2, 'collaborator', $3)
              ON CONFLICT (project_id, user_id) DO NOTHING`,
-            [project.id, memberId]
+            [project.id, memberId, userId]
           );
 
           // Notify new member
