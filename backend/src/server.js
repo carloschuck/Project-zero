@@ -50,7 +50,8 @@ app.get('/health', async (req, res) => {
     await pool.query('SELECT 1');
     res.json({ status: 'healthy', database: 'connected' });
   } catch (error) {
-    res.status(503).json({ status: 'unhealthy', database: 'disconnected' });
+    console.error('Database health check failed:', error.message);
+    res.status(503).json({ status: 'unhealthy', database: 'disconnected', error: error.message });
   }
 });
 
@@ -119,7 +120,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/settings', settingsRoutes);
-app.use('/api/projects', projectRoutes);
+// app.use('/api/projects', projectRoutes);
 app.use('/api', attachmentRoutes);
 
 // 404 handler
@@ -140,6 +141,8 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 API: http://localhost:${PORT}`);
+  console.log(`🗄️  Database: ${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`);
+  console.log(`👤 Database User: ${process.env.DB_USER}`);
 });
 
 // Graceful shutdown
