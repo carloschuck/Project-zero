@@ -67,6 +67,11 @@ export const settingsApi = {
   update: (settings) => axios.put(`${API_URL}/settings`, { settings }),
   sendTestEmail: (recipient) => axios.post(`${API_URL}/settings/test-email`, { recipient }),
   sendTestTemplate: (data) => axios.post(`${API_URL}/settings/test-template`, data),
+  
+  // Email Templates
+  getEmailTemplates: () => axios.get(`${API_URL}/settings/email-templates`),
+  updateEmailTemplate: (templateKey, data) => axios.put(`${API_URL}/settings/email-templates/${templateKey}`, data),
+  sendTestTemplateFromDB: (data) => axios.post(`${API_URL}/settings/test-template-db`, data),
 };
 
 // Projects

@@ -11,6 +11,8 @@ const Settings = () => {
   const [activeTab, setActiveTab] = useState('email');
   const [selectedTemplate, setSelectedTemplate] = useState('request_created');
   const [showPreview, setShowPreview] = useState(false);
+  const [emailTemplates, setEmailTemplates] = useState([]);
+  const [editingTemplate, setEditingTemplate] = useState(null);
   
   const [settings, setSettings] = useState({
     // Email Configuration
@@ -31,177 +33,13 @@ const Settings = () => {
     notify_user_on_status_change: 'true',
   });
 
-  const [emailTemplates, setEmailTemplates] = useState({
-    request_created: {
-      name: 'Request Created (User)',
-      subject: 'Request Created: {{ticket_number}}',
-      body: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-  <div style="background-color: #4F46E5; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
-    <h1 style="margin: 0;">New Request Created</h1>
-  </div>
-  <div style="padding: 20px; border: 1px solid #E5E7EB; border-top: none; border-radius: 0 0 8px 8px;">
-    <p>Hello {{user_name}},</p>
-    <p>Your request has been created successfully.</p>
-    
-    <div style="background-color: #F3F4F6; padding: 15px; border-radius: 6px; margin: 20px 0;">
-      <p style="margin: 5px 0;"><strong>Request Number:</strong> {{ticket_number}}</p>
-      <p style="margin: 5px 0;"><strong>Subject:</strong> {{subject}}</p>
-      <p style="margin: 5px 0;"><strong>Category:</strong> {{category_name}}</p>
-      <p style="margin: 5px 0;"><strong>Status:</strong> <span style="background-color: #10B981; color: white; padding: 2px 8px; border-radius: 4px;">{{status}}</span></p>
-      <p style="margin: 5px 0;"><strong>Priority:</strong> {{priority}}</p>
-    </div>
-    
-    <p>You can track your request in the dashboard.</p>
-    
-    <hr style="border: 1px solid #E5E7EB; margin: 20px 0;">
-    <p style="color: #6B7280; font-size: 12px;">
-      This email was sent from {{org_name}}. Please do not reply to this email.
-    </p>
-  </div>
-</div>`
-    },
-    request_updated: {
-      name: 'Request Updated (User)',
-      subject: 'Request Updated: {{ticket_number}}',
-      body: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-  <div style="background-color: #4F46E5; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
-    <h1 style="margin: 0;">Request Status Updated</h1>
-  </div>
-  <div style="padding: 20px; border: 1px solid #E5E7EB; border-top: none; border-radius: 0 0 8px 8px;">
-    <p>Hello {{user_name}},</p>
-    <p>Your request status has been updated.</p>
-    
-    <div style="background-color: #F3F4F6; padding: 15px; border-radius: 6px; margin: 20px 0;">
-      <p style="margin: 5px 0;"><strong>Request Number:</strong> {{ticket_number}}</p>
-      <p style="margin: 5px 0;"><strong>Subject:</strong> {{subject}}</p>
-      <p style="margin: 5px 0;"><strong>New Status:</strong> <span style="background-color: #3B82F6; color: white; padding: 2px 8px; border-radius: 4px;">{{status}}</span></p>
-      <p style="margin: 5px 0;"><strong>Updated By:</strong> {{updated_by}}</p>
-    </div>
-    
-    <p>Check the dashboard for more details.</p>
-    
-    <hr style="border: 1px solid #E5E7EB; margin: 20px 0;">
-    <p style="color: #6B7280; font-size: 12px;">
-      This email was sent from {{org_name}}. Please do not reply to this email.
-    </p>
-  </div>
-</div>`
-    },
-    request_assigned: {
-      name: 'Request Assigned (Staff)',
-      subject: 'Request Assigned: {{ticket_number}}',
-      body: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-  <div style="background-color: #4F46E5; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
-    <h1 style="margin: 0;">Request Assigned to You</h1>
-  </div>
-  <div style="padding: 20px; border: 1px solid #E5E7EB; border-top: none; border-radius: 0 0 8px 8px;">
-    <p>Hello {{assigned_to_name}},</p>
-    <p>A new request has been assigned to you by {{assigned_by}}.</p>
-    
-    <div style="background-color: #F3F4F6; padding: 15px; border-radius: 6px; margin: 20px 0;">
-      <p style="margin: 5px 0;"><strong>Request Number:</strong> {{ticket_number}}</p>
-      <p style="margin: 5px 0;"><strong>Subject:</strong> {{subject}}</p>
-      <p style="margin: 5px 0;"><strong>Category:</strong> {{category_name}}</p>
-      <p style="margin: 5px 0;"><strong>Priority:</strong> <span style="background-color: #EF4444; color: white; padding: 2px 8px; border-radius: 4px;">{{priority}}</span></p>
-      <p style="margin: 5px 0;"><strong>Requested By:</strong> {{user_name}} ({{user_email}})</p>
-      <p style="margin: 5px 0;"><strong>Department:</strong> {{user_department}}</p>
-      <p style="margin: 5px 0;"><strong>Created:</strong> {{created_at}}</p>
-    </div>
-    
-    <div style="background-color: #FEF3C7; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #F59E0B;">
-      <p style="margin: 0; font-weight: bold; color: #92400E;">Description:</p>
-      <p style="margin: 5px 0 0 0; color: #92400E;">{{description}}</p>
-    </div>
-    
-    <p>Please review and take action on this request.</p>
-    
-    <hr style="border: 1px solid #E5E7EB; margin: 20px 0;">
-    <p style="color: #6B7280; font-size: 12px;">
-      This email was sent from {{org_name}}. Please do not reply to this email.
-    </p>
-  </div>
-</div>`
-    },
-    request_commented: {
-      name: 'New Comment (All Participants)',
-      subject: 'New Comment on {{ticket_number}}',
-      body: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-  <div style="background-color: #4F46E5; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
-    <h1 style="margin: 0;">💬 New Comment Added</h1>
-  </div>
-  <div style="padding: 20px; border: 1px solid #E5E7EB; border-top: none; border-radius: 0 0 8px 8px;">
-    <p>Hello {{user_name}},</p>
-    <p><strong>{{commenter_name}}</strong> added a comment to request <strong>{{ticket_number}}</strong>.</p>
-    
-    <div style="background-color: #F3F4F6; padding: 15px; border-radius: 6px; margin: 20px 0;">
-      <p style="margin: 5px 0;"><strong>Request:</strong> {{subject}}</p>
-      <p style="margin: 5px 0;"><strong>Status:</strong> {{status}}</p>
-    </div>
-    
-    <div style="background-color: #EFF6FF; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #3B82F6;">
-      <p style="margin: 0; font-weight: bold; color: #1E40AF;">{{commenter_name}} wrote:</p>
-      <p style="margin: 10px 0 0 0; color: #1E3A8A;">{{comment_text}}</p>
-      <p style="margin: 10px 0 0 0; font-size: 12px; color: #6B7280;">{{comment_date}}</p>
-    </div>
-    
-    <p>View the full conversation in the dashboard.</p>
-    
-    <hr style="border: 1px solid #E5E7EB; margin: 20px 0;">
-    <p style="color: #6B7280; font-size: 12px;">
-      This email was sent from {{org_name}}. Please do not reply to this email.
-    </p>
-  </div>
-</div>`
-    },
-    admin_new_request: {
-      name: 'New Request (Admin Notification)',
-      subject: '🔔 New Request Created: {{ticket_number}}',
-      body: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-  <div style="background-color: #DC2626; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
-    <h1 style="margin: 0;">🔔 New Request Submitted</h1>
-  </div>
-  <div style="padding: 20px; border: 1px solid #E5E7EB; border-top: none; border-radius: 0 0 8px 8px;">
-    <p>Hello Admin,</p>
-    <p>A new request has been submitted and requires attention.</p>
-    
-    <div style="background-color: #FEF2F2; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #DC2626;">
-      <p style="margin: 5px 0;"><strong>Request Number:</strong> {{ticket_number}}</p>
-      <p style="margin: 5px 0;"><strong>Subject:</strong> {{subject}}</p>
-      <p style="margin: 5px 0;"><strong>Category:</strong> {{category_name}}</p>
-      <p style="margin: 5px 0;"><strong>Priority:</strong> <span style="background-color: #EF4444; color: white; padding: 2px 8px; border-radius: 4px;">{{priority}}</span></p>
-      <p style="margin: 5px 0;"><strong>Status:</strong> {{status}}</p>
-    </div>
-    
-    <div style="background-color: #F3F4F6; padding: 15px; border-radius: 6px; margin: 20px 0;">
-      <p style="margin: 0; font-weight: bold;">Requester Information:</p>
-      <p style="margin: 5px 0;"><strong>Name:</strong> {{user_name}}</p>
-      <p style="margin: 5px 0;"><strong>Email:</strong> {{user_email}}</p>
-      <p style="margin: 5px 0;"><strong>Department:</strong> {{user_department}}</p>
-      <p style="margin: 5px 0;"><strong>Role:</strong> {{user_role}}</p>
-      <p style="margin: 5px 0;"><strong>Submitted:</strong> {{created_at}}</p>
-    </div>
-    
-    <div style="background-color: #FFFBEB; padding: 15px; border-radius: 6px; margin: 20px 0;">
-      <p style="margin: 0; font-weight: bold;">Description:</p>
-      <p style="margin: 5px 0;">{{description}}</p>
-    </div>
-    
-    <p><strong>Action Required:</strong> Please review and assign this request to the appropriate staff member.</p>
-    
-    <hr style="border: 1px solid #E5E7EB; margin: 20px 0;">
-    <p style="color: #6B7280; font-size: 12px;">
-      This email was sent from {{org_name}}. Please do not reply to this email.
-    </p>
-  </div>
-</div>`
-    }
-  });
 
   const [testEmail, setTestEmail] = useState('');
   const [testTemplateEmail, setTestTemplateEmail] = useState('');
 
   useEffect(() => {
     fetchSettings();
+    fetchEmailTemplates();
   }, []);
 
   const fetchSettings = async () => {
@@ -213,6 +51,16 @@ const Settings = () => {
       showMessage('error', 'Failed to load settings');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchEmailTemplates = async () => {
+    try {
+      const response = await settingsApi.getEmailTemplates();
+      setEmailTemplates(response.data.templates);
+    } catch (error) {
+      console.error('Failed to fetch email templates:', error);
+      showMessage('error', 'Failed to load email templates');
     }
   };
 
@@ -299,6 +147,58 @@ const Settings = () => {
   const showMessage = (type, text) => {
     setMessage({ type, text });
     setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+  };
+
+  const handleEditTemplate = (template) => {
+    setEditingTemplate(template);
+  };
+
+  const handleSaveTemplate = async () => {
+    if (!editingTemplate) return;
+
+    setSaving(true);
+    try {
+      await settingsApi.updateEmailTemplate(editingTemplate.template_key, {
+        name: editingTemplate.name,
+        subject: editingTemplate.subject,
+        body: editingTemplate.body,
+        description: editingTemplate.description
+      });
+      
+      // Update local templates
+      setEmailTemplates(prev => 
+        prev.map(t => t.template_key === editingTemplate.template_key ? editingTemplate : t)
+      );
+      
+      setEditingTemplate(null);
+      showMessage('success', 'Email template updated successfully!');
+    } catch (error) {
+      console.error('Failed to save template:', error);
+      showMessage('error', error.response?.data?.error || 'Failed to save template');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleTestTemplateFromDB = async (templateKey) => {
+    if (!testTemplateEmail) {
+      showMessage('error', 'Please enter a test email recipient');
+      return;
+    }
+
+    setSendingTest(true);
+    try {
+      await settingsApi.sendTestTemplateFromDB({
+        recipient: testTemplateEmail,
+        templateKey: templateKey
+      });
+      showMessage('success', `Test email sent successfully to ${testTemplateEmail}!`);
+    } catch (error) {
+      console.error('Failed to send test email:', error);
+      showMessage('error', error.response?.data?.error || 'Failed to send test email');
+    } finally {
+      setSendingTest(false);
+    }
   };
 
   const getPreviewHTML = () => {
@@ -663,6 +563,31 @@ const Settings = () => {
             </div>
           )}
 
+          {/* Save Button - Only show for email and notifications tabs */}
+          {(activeTab === 'email' || activeTab === 'notifications') && (
+            <div className="flex justify-end mt-6">
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving}
+                className="btn-primary flex items-center"
+              >
+                {saving ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-5 h-5 mr-2" />
+                    Save Settings
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </form>
+
           {/* Email Templates Tab */}
           {activeTab === 'templates' && (
             <div className="space-y-6">
@@ -672,18 +597,18 @@ const Settings = () => {
                   <div className="card">
                     <h3 className="text-md font-semibold text-gray-900 dark:text-white mb-4">Email Templates</h3>
                     <div className="space-y-2">
-                      {Object.keys(emailTemplates).map(templateKey => (
+                      {emailTemplates.map(template => (
                         <button
-                          key={templateKey}
+                          key={template.template_key}
                           type="button"
-                          onClick={() => setSelectedTemplate(templateKey)}
+                          onClick={() => setSelectedTemplate(template.template_key)}
                           className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
-                            selectedTemplate === templateKey
+                            selectedTemplate === template.template_key
                               ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
                               : 'bg-gray-50 text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
                           }`}
                         >
-                          {emailTemplates[templateKey].name}
+                          {template.name}
                         </button>
                       ))}
                     </div>
@@ -697,28 +622,69 @@ const Settings = () => {
                       <h3 className="text-md font-semibold text-gray-900 dark:text-white">
                         Edit Template
                       </h3>
-                      <button
-                        type="button"
-                        onClick={() => setShowPreview(!showPreview)}
-                        className="flex items-center px-3 py-2 text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        {showPreview ? 'Hide Preview' : 'Show Preview'}
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setShowPreview(!showPreview)}
+                          className="flex items-center px-3 py-2 text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          {showPreview ? 'Hide Preview' : 'Show Preview'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleTestTemplateFromDB(emailTemplates.find(t => t.template_key === selectedTemplate)?.template_key)}
+                          disabled={sendingTest || !testTemplateEmail}
+                          className="flex items-center px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors disabled:opacity-50"
+                        >
+                          <Send className="w-4 h-4 mr-2" />
+                          {sendingTest ? 'Sending...' : 'Test Email'}
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Subject Line
-                        </label>
-                        <input
-                          type="text"
-                          value={emailTemplates[selectedTemplate].subject}
-                          onChange={(e) => handleTemplateChange('subject', e.target.value)}
-                          className="input"
-                          placeholder="Email subject"
-                        />
+                    {emailTemplates.find(t => t.template_key === selectedTemplate) && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Template Name
+                          </label>
+                          <input
+                            type="text"
+                            value={emailTemplates.find(t => t.template_key === selectedTemplate)?.name || ''}
+                            onChange={(e) => {
+                              const template = emailTemplates.find(t => t.template_key === selectedTemplate);
+                              if (template) {
+                                const updatedTemplate = { ...template, name: e.target.value };
+                                setEmailTemplates(prev => 
+                                  prev.map(t => t.template_key === selectedTemplate ? updatedTemplate : t)
+                                );
+                              }
+                            }}
+                            className="input"
+                            placeholder="Template name"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Subject Line
+                          </label>
+                          <input
+                            type="text"
+                            value={emailTemplates.find(t => t.template_key === selectedTemplate)?.subject || ''}
+                            onChange={(e) => {
+                              const template = emailTemplates.find(t => t.template_key === selectedTemplate);
+                              if (template) {
+                                const updatedTemplate = { ...template, subject: e.target.value };
+                                setEmailTemplates(prev => 
+                                  prev.map(t => t.template_key === selectedTemplate ? updatedTemplate : t)
+                                );
+                              }
+                            }}
+                            className="input"
+                            placeholder="Email subject"
+                          />
                         <details className="mt-2">
                           <summary className="text-xs text-primary-600 dark:text-primary-400 cursor-pointer hover:underline">
                             📋 Available Variables (click to expand)
@@ -771,30 +737,46 @@ const Settings = () => {
                         </details>
                       </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Email Body (HTML)
-                        </label>
-                        <textarea
-                          value={emailTemplates[selectedTemplate].body}
-                          onChange={(e) => handleTemplateChange('body', e.target.value)}
-                          rows={12}
-                          className="input font-mono text-sm"
-                          placeholder="Email HTML content"
-                        />
-                      </div>
-
-                      {/* Preview */}
-                      {showPreview && (
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Preview
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Email Body (HTML)
                           </label>
-                          <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-900 max-h-96 overflow-y-auto">
-                            <div dangerouslySetInnerHTML={{ __html: getPreviewHTML() }} />
-                          </div>
+                          <textarea
+                            value={emailTemplates.find(t => t.template_key === selectedTemplate)?.body || ''}
+                            onChange={(e) => {
+                              const template = emailTemplates.find(t => t.template_key === selectedTemplate);
+                              if (template) {
+                                const updatedTemplate = { ...template, body: e.target.value };
+                                setEmailTemplates(prev => 
+                                  prev.map(t => t.template_key === selectedTemplate ? updatedTemplate : t)
+                                );
+                              }
+                            }}
+                            rows={12}
+                            className="input font-mono text-sm"
+                            placeholder="Email HTML content"
+                          />
                         </div>
-                      )}
+
+                        {/* Preview */}
+                        {showPreview && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Preview
+                            </label>
+                            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-900 max-h-96 overflow-y-auto">
+                              <div dangerouslySetInnerHTML={{ 
+                                __html: emailTemplates.find(t => t.template_key === selectedTemplate)?.body
+                                  ?.replace(/\{\{user_name\}\}/g, 'John Doe')
+                                  ?.replace(/\{\{ticket_number\}\}/g, 'REQ-2024-001')
+                                  ?.replace(/\{\{subject\}\}/g, 'Sample Request Subject')
+                                  ?.replace(/\{\{status\}\}/g, 'open')
+                                  ?.replace(/\{\{priority\}\}/g, 'high')
+                                  ?.replace(/\{\{org_name\}\}/g, 'Ticketing System') || ''
+                              }} />
+                            </div>
+                          </div>
+                        )}
 
                       {/* Test Template */}
                       <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -810,7 +792,7 @@ const Settings = () => {
                         />
                         <button
                           type="button"
-                          onClick={handleTestTemplate}
+                          onClick={() => handleTestTemplateFromDB(emailTemplates.find(t => t.template_key === selectedTemplate)?.template_key)}
                           disabled={sendingTest}
                           className="w-full mt-3 flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
                         >
@@ -827,36 +809,40 @@ const Settings = () => {
                           )}
                         </button>
                       </div>
+
+                      {/* Save Button */}
+                      <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const template = emailTemplates.find(t => t.template_key === selectedTemplate);
+                            if (template) {
+                              handleEditTemplate(template);
+                              handleSaveTemplate();
+                            }
+                          }}
+                          disabled={saving}
+                          className="w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                        >
+                          {saving ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Saving...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="w-4 h-4 mr-2" />
+                              Save Template
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
           )}
-
-          {/* Save Button - Only show for email and notifications tabs */}
-          {(activeTab === 'email' || activeTab === 'notifications') && (
-            <div className="flex justify-end mt-6">
-              <button
-                type="submit"
-                disabled={saving}
-                className="btn-primary flex items-center"
-              >
-                {saving ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-5 h-5 mr-2" />
-                    Save Settings
-                  </>
-                )}
-              </button>
-            </div>
-          )}
-        </form>
       </div>
     </Layout>
   );

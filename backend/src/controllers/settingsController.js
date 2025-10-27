@@ -186,10 +186,151 @@ const sendTestTemplate = async (req, res) => {
   }
 };
 
+const getEmailTemplates = async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM email_templates WHERE is_active = true ORDER BY template_key ASC'
+    );
+
+    res.json({ templates: result.rows });
+  } catch (error) {
+    console.error('Get email templates error:', error);
+    res.status(500).json({ error: 'Failed to fetch email templates' });
+  }
+};
+
+const updateEmailTemplate = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { templateKey } = req.params;
+    const { name, subject, body, description } = req.body;
+
+    await client.query('BEGIN');
+
+    const result = await client.query(
+      `UPDATE email_templates 
+       SET name = $1, subject = $2, body = $3, description = $4, updated_at = CURRENT_TIMESTAMP
+       WHERE template_key = $5
+       RETURNING *`,
+      [name, subject, body, description, templateKey]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Email template not found' });
+    }
+
+    await client.query('COMMIT');
+
+    res.json({
+      message: 'Email template updated successfully',
+      template: result.rows[0]
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Update email template error:', error);
+    res.status(500).json({ error: 'Failed to update email template' });
+  } finally {
+    client.release();
+  }
+};
+
+const sendTestTemplateFromDB = async (req, res) => {
+  try {
+    const { recipient, templateKey } = req.body;
+
+    if (!recipient) {
+      return res.status(400).json({ error: 'Recipient email is required' });
+    }
+
+    if (!templateKey) {
+      return res.status(400).json({ error: 'Template key is required' });
+    }
+
+    // Get email template
+    const templateResult = await pool.query(
+      'SELECT * FROM email_templates WHERE template_key = $1 AND is_active = true',
+      [templateKey]
+    );
+
+    if (templateResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Email template not found' });
+    }
+
+    const template = templateResult.rows[0];
+
+    // Get email settings
+    const settingsResult = await pool.query(
+      `SELECT setting_key, setting_value 
+       FROM system_settings 
+       WHERE setting_key LIKE 'smtp_%' OR setting_key LIKE 'email_%'`
+    );
+
+    const settings = settingsResult.rows.reduce((acc, row) => {
+      acc[row.setting_key] = row.setting_value;
+      return acc;
+    }, {});
+
+    // Create transporter
+    const transporter = nodemailer.createTransport({
+      host: settings.smtp_host || 'smtp.gmail.com',
+      port: parseInt(settings.smtp_port) || 587,
+      secure: settings.smtp_secure === 'true',
+      auth: {
+        user: settings.smtp_username,
+        pass: settings.smtp_password,
+      },
+    });
+
+    // Replace template variables with sample data
+    const processedSubject = template.subject
+      .replace(/\{\{user_name\}\}/g, 'John Doe')
+      .replace(/\{\{ticket_number\}\}/g, 'REQ-2024-001')
+      .replace(/\{\{subject\}\}/g, 'Sample Request Subject')
+      .replace(/\{\{status\}\}/g, 'open')
+      .replace(/\{\{priority\}\}/g, 'high')
+      .replace(/\{\{project_number\}\}/g, 'PRJ-0001')
+      .replace(/\{\{project_title\}\}/g, 'Sample Project')
+      .replace(/\{\{org_name\}\}/g, settings.email_from_name || 'Ticketing System');
+
+    const processedBody = template.body
+      .replace(/\{\{user_name\}\}/g, 'John Doe')
+      .replace(/\{\{ticket_number\}\}/g, 'REQ-2024-001')
+      .replace(/\{\{subject\}\}/g, 'Sample Request Subject')
+      .replace(/\{\{status\}\}/g, 'open')
+      .replace(/\{\{priority\}\}/g, 'high')
+      .replace(/\{\{description\}\}/g, 'This is a sample description of the request.')
+      .replace(/\{\{project_number\}\}/g, 'PRJ-0001')
+      .replace(/\{\{project_title\}\}/g, 'Sample Project')
+      .replace(/\{\{org_name\}\}/g, settings.email_from_name || 'Ticketing System');
+
+    // Send test email
+    const info = await transporter.sendMail({
+      from: `"${settings.email_from_name || 'Ticketing System'}" <${settings.email_from_address || 'noreply@ticketing.com'}>`,
+      to: recipient,
+      subject: `[TEST] ${processedSubject}`,
+      html: processedBody,
+    });
+
+    res.json({ 
+      message: 'Test email sent successfully',
+      messageId: info.messageId 
+    });
+  } catch (error) {
+    console.error('Send test template error:', error);
+    res.status(500).json({ 
+      error: 'Failed to send test email',
+      details: error.message 
+    });
+  }
+};
+
 module.exports = {
   getSettings,
   updateSettings,
   sendTestEmail,
-  sendTestTemplate
+  sendTestTemplate,
+  getEmailTemplates,
+  updateEmailTemplate,
+  sendTestTemplateFromDB
 };
 
