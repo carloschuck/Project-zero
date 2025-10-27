@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { projectsApi, usersApi } from '../services/api';
-import { Plus, Search, FolderKanban, Calendar, Users, CheckSquare } from 'lucide-react';
+import { Plus, Search, FolderKanban, Calendar, Users, CheckSquare, Edit, Trash2, MoreVertical } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import StatusBadge from '../components/StatusBadge';
 import { useAuth } from '../contexts/AuthContext';
 
 const Projects = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -24,6 +25,8 @@ const Projects = () => {
     pages: 0,
   });
   const [stats, setStats] = useState(null);
+  const [showActions, setShowActions] = useState({});
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   useEffect(() => {
     fetchProjects();
@@ -63,6 +66,40 @@ const Projects = () => {
   const handleFilterChange = (key, value) => {
     setFilters({ ...filters, [key]: value });
     setPagination({ ...pagination, page: 1 });
+  };
+
+  const handleEditProject = (projectId) => {
+    navigate(`/projects/${projectId}/edit`);
+  };
+
+  const handleDeleteProject = async (projectId) => {
+    try {
+      await projectsApi.delete(projectId);
+      setProjects(projects.filter(p => p.id !== projectId));
+      setDeleteConfirm(null);
+      // Refresh stats
+      fetchStats();
+    } catch (error) {
+      console.error('Failed to delete project:', error);
+      alert('Failed to delete project. Please try again.');
+    }
+  };
+
+  const toggleActions = (projectId) => {
+    setShowActions(prev => ({
+      ...prev,
+      [projectId]: !prev[projectId]
+    }));
+  };
+
+  const canEditProject = (project) => {
+    return user?.role === 'admin' || 
+           project.owner_id === user?.id || 
+           project.created_by === user?.id;
+  };
+
+  const canDeleteProject = (project) => {
+    return user?.role === 'admin' || project.owner_id === user?.id;
   };
 
   const getStatusColor = (status) => {
@@ -241,15 +278,17 @@ const Projects = () => {
                 : 0;
               
               return (
-                <Link
+                <div
                   key={project.id}
-                  to={`/projects/${project.id}`}
-                  className="card hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+                  className="card hover:shadow-lg transition-shadow duration-200 relative group"
                 >
                   <div className="space-y-4">
                     {/* Header */}
                     <div className="flex items-start justify-between">
-                      <div className="flex-1">
+                      <Link
+                        to={`/projects/${project.id}`}
+                        className="flex-1 cursor-pointer"
+                      >
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-xl">{getSourceIcon(project.source)}</span>
                           <span className="text-xs font-mono text-gray-500 dark:text-gray-400">
@@ -264,7 +303,53 @@ const Projects = () => {
                             {project.description}
                           </p>
                         )}
-                      </div>
+                      </Link>
+                      
+                      {/* Actions Menu */}
+                      {(canEditProject(project) || canDeleteProject(project)) && (
+                        <div className="relative">
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              toggleActions(project.id);
+                            }}
+                            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </button>
+                          
+                          {showActions[project.id] && (
+                            <div className="absolute right-0 top-8 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-10 min-w-[120px]">
+                              {canEditProject(project) && (
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handleEditProject(project.id);
+                                    setShowActions(prev => ({ ...prev, [project.id]: false }));
+                                  }}
+                                  className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                                >
+                                  <Edit className="w-4 h-4 mr-2" />
+                                  Edit
+                                </button>
+                              )}
+                              {canDeleteProject(project) && (
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    setDeleteConfirm(project);
+                                    setShowActions(prev => ({ ...prev, [project.id]: false }));
+                                  }}
+                                  className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Status and Priority */}
@@ -321,7 +406,7 @@ const Projects = () => {
                       <span className="ml-1">{project.owner_first_name} {project.owner_last_name}</span>
                     </div>
                   </div>
-                </Link>
+                </div>
               );
             })
           )}
@@ -352,6 +437,34 @@ const Projects = () => {
                   className="btn-secondary disabled:opacity-50"
                 >
                   Next
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {deleteConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Delete Project
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Are you sure you want to delete the project "{deleteConfirm.title}"? This action cannot be undone.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setDeleteConfirm(null)}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDeleteProject(deleteConfirm.id)}
+                  className="btn-danger"
+                >
+                  Delete
                 </button>
               </div>
             </div>

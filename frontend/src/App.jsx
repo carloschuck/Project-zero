@@ -11,6 +11,7 @@ import CreateRequest from './pages/CreateRequest';
 import Projects from './pages/Projects';
 import ProjectDetail from './pages/ProjectDetail';
 import CreateProject from './pages/CreateProject';
+import EditProject from './pages/EditProject';
 import Users from './pages/Users';
 import Categories from './pages/Categories';
 import Analytics from './pages/Analytics';
@@ -118,6 +119,15 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ProjectDetail />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/projects/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <EditProject />
                 </ProtectedRoute>
               }
             />
