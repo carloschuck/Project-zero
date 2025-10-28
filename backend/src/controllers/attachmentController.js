@@ -38,7 +38,10 @@ const uploadAttachment = async (req, res) => {
       );
 
       if (ticketResult.rows.length === 0) {
-        fs.unlinkSync(file.path);
+        // Only try to delete file if it's on disk (not memory storage)
+        if (file.path) {
+          fs.unlinkSync(file.path);
+        }
         return res.status(404).json({ error: 'Ticket not found' });
       }
 
@@ -58,7 +61,10 @@ const uploadAttachment = async (req, res) => {
       );
 
       if (projectResult.rows.length === 0) {
-        fs.unlinkSync(file.path);
+        // Only try to delete file if it's on disk (not memory storage)
+        if (file.path) {
+          fs.unlinkSync(file.path);
+        }
         return res.status(404).json({ error: 'Project not found' });
       }
 
@@ -80,14 +86,26 @@ const uploadAttachment = async (req, res) => {
         project.member_id !== null ||
         req.user.role === 'admin';
     } else {
-      fs.unlinkSync(file.path);
+      // Only try to delete file if it's on disk (not memory storage)
+      if (file.path) {
+        fs.unlinkSync(file.path);
+      }
       return res.status(400).json({ error: 'Either ticketId or projectId is required' });
     }
 
     if (!canAddAttachment) {
-      fs.unlinkSync(file.path);
+      // Only try to delete file if it's on disk (not memory storage)
+      if (file.path) {
+        fs.unlinkSync(file.path);
+      }
       return res.status(403).json({ error: 'You do not have permission to add attachments' });
     }
+
+    // Generate unique filename for database storage
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    const nameWithoutExt = path.basename(file.originalname, ext);
+    const dbFilename = `${nameWithoutExt}-${uniqueSuffix}${ext}`;
 
     // Save attachment info to database
     const result = await pool.query(
@@ -98,9 +116,9 @@ const uploadAttachment = async (req, res) => {
         ticketId || null,
         projectId || null,
         entityType,
-        file.filename,
+        dbFilename,
         file.originalname,
-        file.path,
+        file.path || 'memory-storage', // Use placeholder for memory storage
         file.size,
         file.mimetype,
         req.user.id
@@ -125,8 +143,8 @@ const uploadAttachment = async (req, res) => {
       filePath: req.file?.path
     });
     
-    // Clean up file if database operation fails
-    if (req.file) {
+    // Clean up file if database operation fails (only for disk storage)
+    if (req.file && req.file.path) {
       try {
         fs.unlinkSync(req.file.path);
         console.log('✅ Cleaned up uploaded file');
