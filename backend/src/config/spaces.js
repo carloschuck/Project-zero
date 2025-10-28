@@ -14,13 +14,14 @@ if (isSpacesConfigured) {
   console.log(`🌐 Region: ${process.env.SPACES_REGION || 'nyc3'}`);
   
   s3Client = new S3Client({
-    endpoint: process.env.SPACES_ENDPOINT, // e.g., https://nyc3.digitaloceanspaces.com
+    endpoint: process.env.SPACES_ENDPOINT, // e.g., https://sfo3.digitaloceanspaces.com
     region: process.env.SPACES_REGION || 'nyc3',
     credentials: {
       accessKeyId: process.env.SPACES_KEY,
       secretAccessKey: process.env.SPACES_SECRET,
     },
-    forcePathStyle: false, // DigitalOcean Spaces uses virtual-hosted-style
+    forcePathStyle: false, // Spaces uses virtual-hosted-style (bucket.region.digitaloceanspaces.com)
+    // This is correct - the bucket name will be automatically prepended to the endpoint
   });
   
   console.log('✅ DigitalOcean Spaces client configured successfully');
