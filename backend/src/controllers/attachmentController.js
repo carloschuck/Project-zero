@@ -115,8 +115,8 @@ const uploadAttachment = async (req, res) => {
 
     // Save attachment info to database
     const result = await pool.query(
-      `INSERT INTO attachments (ticket_id, project_id, entity_type, file_name, file_path, file_size, mime_type, uploaded_by, uploaded_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
+      `INSERT INTO attachments (ticket_id, project_id, entity_type, file_name, file_path, file_size, mime_type, uploaded_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
       [
         ticketId || null,
