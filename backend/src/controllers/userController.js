@@ -41,6 +41,10 @@ const getAllUsers = async (req, res) => {
     const { role, page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
 
+    // Debug logging
+    console.log('getAllUsers - req.user:', req.user);
+    console.log('getAllUsers - req.user.role:', req.user?.role);
+
     let query = `
       SELECT id, email, first_name, last_name, role, department, is_active, created_at
       FROM users
@@ -51,9 +55,12 @@ const getAllUsers = async (req, res) => {
 
     // Filter out admin users for non-admin users
     if (req.user.role !== 'admin') {
+      console.log('Filtering out admin users for non-admin user');
       query += ` AND role != $${paramCount}`;
       params.push('admin');
       paramCount++;
+    } else {
+      console.log('Admin user - showing all users including admins');
     }
 
     if (role) {
