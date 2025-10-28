@@ -35,10 +35,10 @@ app.use(morgan('dev'));
 // Initialize email transporter
 initEmailTransporter();
 
-// Rate limiting for authentication endpoints (temporarily increased for testing)
+// Rate limiting for authentication endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 50, // 50 attempts per window (increased for testing)
+  max: 10, // 10 attempts per window (reasonable for production)
   message: { error: 'Too many login attempts, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -53,21 +53,6 @@ app.get('/health', async (req, res) => {
     console.error('Database health check failed:', error.message);
     res.status(503).json({ status: 'unhealthy', database: 'disconnected', error: error.message });
   }
-});
-
-// Test endpoint
-app.get('/api/test', (req, res) => {
-  res.json({ message: 'Test endpoint working' });
-});
-
-// Simple login test endpoint
-app.post('/api/test-login', (req, res) => {
-  res.json({ message: 'Login test endpoint working', body: req.body });
-});
-
-// Simple projects test endpoint
-app.get('/api/projects-test', (req, res) => {
-  res.json({ message: 'Projects test endpoint working' });
 });
 
 // Temporary migration endpoint for projects
