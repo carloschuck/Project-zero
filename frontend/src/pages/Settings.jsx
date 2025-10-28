@@ -10,6 +10,7 @@ const Settings = () => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [activeTab, setActiveTab] = useState('email');
   const [selectedTemplate, setSelectedTemplate] = useState('request_created');
+  const [selectedProjectTemplate, setSelectedProjectTemplate] = useState('project_created');
   const [showPreview, setShowPreview] = useState(false);
   
   const [settings, setSettings] = useState({
@@ -200,6 +201,64 @@ const Settings = () => {
   const [testEmail, setTestEmail] = useState('');
   const [testTemplateEmail, setTestTemplateEmail] = useState('');
 
+  const [projectTemplates] = useState({
+    project_created: {
+      name: 'Project Created',
+      subject: 'New Project Created: {{project_title}}',
+      body: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <div style="background-color: #4F46E5; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+    <h1 style="margin: 0;">New Project Created</h1>
+  </div>
+  <div style="padding: 20px; border: 1px solid #E5E7EB; border-top: none; border-radius: 0 0 8px 8px;">
+    <p>Hello {{user_name}},</p>
+    <p>A new project has been created and you have been added as a member.</p>
+    
+    <div style="background-color: #F3F4F6; padding: 15px; border-radius: 6px; margin: 20px 0;">
+      <p style="margin: 5px 0;"><strong>Project Number:</strong> {{project_number}}</p>
+      <p style="margin: 5px 0;"><strong>Title:</strong> {{project_title}}</p>
+      <p style="margin: 5px 0;"><strong>Priority:</strong> {{priority}}</p>
+      <p style="margin: 5px 0;"><strong>Status:</strong> {{status}}</p>
+      <p style="margin: 5px 0;"><strong>Owner:</strong> {{owner_name}}</p>
+    </div>
+    
+    <p>You can view and contribute to this project in the dashboard.</p>
+    
+    <hr style="border: 1px solid #E5E7EB; margin: 20px 0;">
+    <p style="color: #6B7280; font-size: 12px;">
+      This email was sent from {{org_name}}. Please do not reply to this email.
+    </p>
+  </div>
+</div>`
+    },
+    project_updated: {
+      name: 'Project Updated',
+      subject: 'Project Updated: {{project_title}}',
+      body: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <div style="background-color: #4F46E5; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+    <h1 style="margin: 0;">Project Updated</h1>
+  </div>
+  <div style="padding: 20px; border: 1px solid #E5E7EB; border-top: none; border-radius: 0 0 8px 8px;">
+    <p>Hello {{user_name}},</p>
+    <p>The project you are involved in has been updated.</p>
+    
+    <div style="background-color: #F3F4F6; padding: 15px; border-radius: 6px; margin: 20px 0;">
+      <p style="margin: 5px 0;"><strong>Project Number:</strong> {{project_number}}</p>
+      <p style="margin: 5px 0;"><strong>Title:</strong> {{project_title}}</p>
+      <p style="margin: 5px 0;"><strong>Status:</strong> {{status}}</p>
+      <p style="margin: 5px 0;"><strong>Updated By:</strong> {{updated_by}}</p>
+    </div>
+    
+    <p>Check the dashboard for more details.</p>
+    
+    <hr style="border: 1px solid #E5E7EB; margin: 20px 0;">
+    <p style="color: #6B7280; font-size: 12px;">
+      This email was sent from {{org_name}}. Please do not reply to this email.
+    </p>
+  </div>
+</div>`
+    }
+  });
+
   useEffect(() => {
     fetchSettings();
   }, []);
@@ -336,7 +395,8 @@ const Settings = () => {
   const tabs = [
     { id: 'email', label: 'Email Configuration', icon: Mail },
     { id: 'notifications', label: 'Notification Preferences', icon: Bell },
-    { id: 'templates', label: 'Email Templates', icon: FileText },
+    { id: 'templates', label: 'Request Templates', icon: FileText },
+    { id: 'project-templates', label: 'Project Templates', icon: FileText },
   ];
 
   return (
@@ -826,6 +886,130 @@ const Settings = () => {
                             </>
                           )}
                         </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Project Templates Tab */}
+          {activeTab === 'project-templates' && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Template Selector */}
+                <div className="lg:col-span-1">
+                  <div className="card">
+                    <h3 className="text-md font-semibold text-gray-900 dark:text-white mb-4">Project Templates</h3>
+                    <div className="space-y-2">
+                      {Object.keys(projectTemplates).map(templateKey => (
+                        <button
+                          key={templateKey}
+                          type="button"
+                          onClick={() => setSelectedProjectTemplate(templateKey)}
+                          className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
+                            selectedProjectTemplate === templateKey
+                              ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
+                              : 'bg-gray-50 text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                          }`}
+                        >
+                          {projectTemplates[templateKey].name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Template Editor */}
+                <div className="lg:col-span-2">
+                  <div className="card">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-md font-semibold text-gray-900 dark:text-white">
+                        View Template
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => setShowPreview(!showPreview)}
+                        className="flex items-center px-3 py-2 text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        {showPreview ? 'Hide Preview' : 'Show Preview'}
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {/* Subject Line */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Subject Line
+                        </label>
+                        <input
+                          type="text"
+                          value={projectTemplates[selectedProjectTemplate].subject}
+                          readOnly
+                          className="input bg-gray-50 dark:bg-gray-800 cursor-not-allowed"
+                          placeholder="Email subject"
+                        />
+                      </div>
+
+                      {/* Email Body */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Email Body (HTML)
+                        </label>
+                        <textarea
+                          value={projectTemplates[selectedProjectTemplate].body}
+                          readOnly
+                          rows={12}
+                          className="input font-mono text-sm bg-gray-50 dark:bg-gray-800 cursor-not-allowed"
+                          placeholder="Email HTML content"
+                        />
+                      </div>
+
+                      {/* Preview */}
+                      {showPreview && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Preview
+                          </label>
+                          <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-900 max-h-96 overflow-y-auto">
+                            <div dangerouslySetInnerHTML={{ 
+                              __html: projectTemplates[selectedProjectTemplate].body
+                                .replace(/\{\{user_name\}\}/g, 'John Doe')
+                                .replace(/\{\{project_number\}\}/g, 'PROJ-2024-001')
+                                .replace(/\{\{project_title\}\}/g, 'Sample Project')
+                                .replace(/\{\{status\}\}/g, 'active')
+                                .replace(/\{\{priority\}\}/g, 'high')
+                                .replace(/\{\{owner_name\}\}/g, 'Jane Smith')
+                                .replace(/\{\{updated_by\}\}/g, 'Mike Johnson')
+                                .replace(/\{\{org_name\}\}/g, 'Ticketing System')
+                            }} />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Available Variables */}
+                      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">
+                          Available Variables
+                        </h4>
+                        <div className="text-sm text-blue-800 dark:text-blue-400 space-y-1">
+                          <p><code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">{'{{project_number}}'}</code> - Project number</p>
+                          <p><code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">{'{{project_title}}'}</code> - Project title</p>
+                          <p><code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">{'{{status}}'}</code> - Project status</p>
+                          <p><code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">{'{{priority}}'}</code> - Project priority</p>
+                          <p><code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">{'{{owner_name}}'}</code> - Project owner name</p>
+                          <p><code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">{'{{user_name}}'}</code> - Recipient name</p>
+                          <p><code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">{'{{updated_by}}'}</code> - Person who updated</p>
+                          <p><code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">{'{{org_name}}'}</code> - Organization name</p>
+                        </div>
+                      </div>
+
+                      <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                        <p className="text-sm text-yellow-800 dark:text-yellow-300">
+                          <strong>Note:</strong> Project email templates are currently view-only. These templates are managed in the database and will be sent automatically when project events occur.
+                        </p>
                       </div>
                     </div>
                   </div>
