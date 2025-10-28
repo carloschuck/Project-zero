@@ -4,27 +4,11 @@ const fs = require('fs');
 
 const uploadAttachment = async (req, res) => {
   try {
-    console.log('📁 Upload attachment started:', {
-      ticketId: req.params.ticketId,
-      projectId: req.params.projectId,
-      userId: req.user?.id,
-      userRole: req.user?.role,
-      hasFile: !!req.file,
-      fileInfo: req.file ? {
-        filename: req.file.filename,
-        originalname: req.file.originalname,
-        size: req.file.size,
-        mimetype: req.file.mimetype,
-        path: req.file.path
-      } : null
-    });
-
     const { ticketId, projectId } = req.params;
     const file = req.file;
     const entityType = req.body.entity_type || 'ticket';
 
     if (!file) {
-      console.log('❌ No file uploaded');
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
@@ -69,18 +53,6 @@ const uploadAttachment = async (req, res) => {
       }
 
       const project = projectResult.rows[0];
-      
-      // Debug logging
-      console.log('Project upload debug:', {
-        userId: req.user.id,
-        userRole: req.user.role,
-        projectOwnerId: project.owner_id,
-        memberId: project.member_id,
-        isOwner: project.owner_id === req.user.id,
-        isMember: project.member_id !== null,
-        isAdmin: req.user.role === 'admin'
-      });
-      
       canAddAttachment = 
         project.owner_id === req.user.id || 
         project.member_id !== null ||
@@ -133,23 +105,14 @@ const uploadAttachment = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('❌ Upload attachment error:', error);
-    console.error('❌ Error stack:', error.stack);
-    console.error('❌ Request details:', {
-      ticketId: req.params.ticketId,
-      projectId: req.params.projectId,
-      userId: req.user?.id,
-      hasFile: !!req.file,
-      filePath: req.file?.path
-    });
+    console.error('Upload attachment error:', error);
     
     // Clean up file if database operation fails (only for disk storage)
     if (req.file && req.file.path) {
       try {
         fs.unlinkSync(req.file.path);
-        console.log('✅ Cleaned up uploaded file');
       } catch (unlinkError) {
-        console.error('❌ Failed to delete file:', unlinkError);
+        console.error('Failed to delete file:', unlinkError);
       }
     }
     res.status(500).json({ error: 'Failed to upload file' });
