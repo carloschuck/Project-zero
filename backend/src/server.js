@@ -96,7 +96,8 @@ app.post('/api/migrate/projects', async (req, res) => {
 });
 
 // Migration endpoint for attachments table (add project support)
-app.post('/api/migrate/attachments', async (req, res) => {
+// Allow both GET and POST for easy browser access
+app.all('/api/migrate/attachments', async (req, res) => {
   try {
     console.log('🗄️  Starting attachments migration...');
     
