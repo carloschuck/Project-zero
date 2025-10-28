@@ -95,6 +95,44 @@ app.post('/api/migrate/projects', async (req, res) => {
   }
 });
 
+// Migration endpoint for attachments table (add project support)
+app.post('/api/migrate/attachments', async (req, res) => {
+  try {
+    console.log('🗄️  Starting attachments migration...');
+    
+    const fs = require('fs');
+    const path = require('path');
+    
+    // Read and execute the attachments migration
+    const attachmentsMigrationPath = path.join(__dirname, 'migrations/update_attachments_for_projects.sql');
+    const attachmentsMigration = fs.readFileSync(attachmentsMigrationPath, 'utf8');
+    
+    await pool.query(attachmentsMigration);
+    console.log('✅ Attachments table updated');
+
+    res.json({
+      success: true,
+      message: 'Attachments migration completed successfully!',
+      changes: [
+        'Added filename column',
+        'Added original_filename column', 
+        'Added project_id column',
+        'Added entity_type column',
+        'Made ticket_id optional',
+        'Added project_id index'
+      ]
+    });
+
+  } catch (error) {
+    console.error('❌ Attachments migration failed:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      detail: error.detail
+    });
+  }
+});
+
 // API routes (with /api prefix)
 app.use('/api/migrate', migrateRoutes);
 app.use('/api/auth/login', authLimiter);

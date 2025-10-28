@@ -94,7 +94,7 @@ const uploadAttachment = async (req, res) => {
           Key: key,
           Body: file.buffer || fs.createReadStream(file.path),
           ContentType: file.mimetype,
-          ACL: 'private', // Keep files private, require authentication to access
+          // ACL removed - some regions don't support it, use bucket settings instead
         };
 
         await s3Client.send(new PutObjectCommand(uploadParams));
