@@ -18,13 +18,23 @@ const CreateProject = () => {
     source: 'meeting',
     startDate: '',
     dueDate: '',
-    ownerId: user?.id || '',
+    ownerId: user?.role === 'admin' ? '' : user?.id || '',
     members: [],
   });
 
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  // Update ownerId when user data loads (for non-admin users)
+  useEffect(() => {
+    if (user && user.role !== 'admin') {
+      setFormData(prev => ({
+        ...prev,
+        ownerId: user.id
+      }));
+    }
+  }, [user]);
 
   const fetchUsers = async () => {
     try {
@@ -40,7 +50,13 @@ const CreateProject = () => {
     setLoading(true);
 
     try {
-      const response = await projectsApi.create(formData);
+      // Ensure ownerId is set for non-admin users
+      const submitData = {
+        ...formData,
+        ownerId: user?.role !== 'admin' ? user.id : formData.ownerId
+      };
+      
+      const response = await projectsApi.create(submitData);
       navigate(`/projects/${response.data.project.id}`);
     } catch (error) {
       console.error('Failed to create project:', error);
@@ -183,28 +199,47 @@ const CreateProject = () => {
             </div>
           </div>
 
-          {/* Project Owner */}
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Project Owner
-            </h2>
-            <select
-              value={formData.ownerId}
-              onChange={(e) => setFormData({ ...formData, ownerId: e.target.value })}
-              className="input"
-              required
-            >
-              <option value="">Select owner...</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.first_name} {u.last_name} ({u.email})
-                </option>
-              ))}
-            </select>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              The project owner has full control over the project
-            </p>
-          </div>
+          {/* Project Owner - Only for Admin users */}
+          {user?.role === 'admin' && (
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Project Owner
+              </h2>
+              <select
+                value={formData.ownerId}
+                onChange={(e) => setFormData({ ...formData, ownerId: e.target.value })}
+                className="input"
+                required
+              >
+                <option value="">Select owner...</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.first_name} {u.last_name} ({u.email})
+                  </option>
+                ))}
+              </select>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                The project owner has full control over the project
+              </p>
+            </div>
+          )}
+
+          {/* Project Owner Info for Non-Admin users */}
+          {user?.role !== 'admin' && (
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Project Owner
+              </h2>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  <span className="font-medium">You will be the project owner</span>
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  As the creator, you have full control over this project
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Team Members */}
           <div>
