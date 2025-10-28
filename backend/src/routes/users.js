@@ -40,9 +40,9 @@ const resetPasswordValidation = [
   body('newPassword').isLength({ min: 6 })
 ];
 
-// Routes (admin only except password change)
+// Routes (admin only except password change and user list for team selection)
 router.post('/', authenticateToken, authorizeRoles('admin'), createUserValidation, createUser);
-router.get('/', authenticateToken, authorizeRoles('admin'), getAllUsers);
+router.get('/', authenticateToken, getAllUsers); // Allow all authenticated users to fetch user list
 router.get('/:id', authenticateToken, authorizeRoles('admin'), getUserById);
 router.patch('/:id', authenticateToken, authorizeRoles('admin'), updateUserValidation, updateUser);
 router.delete('/:id', authenticateToken, authorizeRoles('admin'), deleteUser);
