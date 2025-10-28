@@ -200,8 +200,9 @@ const Settings = () => {
 
   const [testEmail, setTestEmail] = useState('');
   const [testTemplateEmail, setTestTemplateEmail] = useState('');
+  const [testProjectTemplateEmail, setTestProjectTemplateEmail] = useState('');
 
-  const [projectTemplates] = useState({
+  const [projectTemplates, setProjectTemplates] = useState({
     project_created: {
       name: 'Project Created',
       subject: 'New Project Created: {{project_title}}',
@@ -293,6 +294,16 @@ const Settings = () => {
     }));
   };
 
+  const handleProjectTemplateChange = (field, value) => {
+    setProjectTemplates(prev => ({
+      ...prev,
+      [selectedProjectTemplate]: {
+        ...prev[selectedProjectTemplate],
+        [field]: value
+      }
+    }));
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -347,6 +358,32 @@ const Settings = () => {
         body: emailTemplates[selectedTemplate].body
       });
       showMessage('success', `Test email sent successfully to ${testTemplateEmail}!`);
+    } catch (error) {
+      console.error('Failed to send test email:', error);
+      showMessage('error', error.response?.data?.error || 'Failed to send test email');
+    } finally {
+      setSendingTest(false);
+    }
+  };
+
+  const handleTestProjectTemplate = async () => {
+    if (!testProjectTemplateEmail) {
+      showMessage('error', 'Please enter a test email recipient');
+      return;
+    }
+
+    setSendingTest(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      // Send test with current project template
+      await settingsApi.sendTestTemplate({ 
+        recipient: testProjectTemplateEmail,
+        template: selectedProjectTemplate,
+        subject: projectTemplates[selectedProjectTemplate].subject,
+        body: projectTemplates[selectedProjectTemplate].body
+      });
+      showMessage('success', `Test email sent successfully to ${testProjectTemplateEmail}!`);
     } catch (error) {
       console.error('Failed to send test email:', error);
       showMessage('error', error.response?.data?.error || 'Failed to send test email');
@@ -926,7 +963,7 @@ const Settings = () => {
                   <div className="card">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-md font-semibold text-gray-900 dark:text-white">
-                        View Template
+                        Edit Template
                       </h3>
                       <button
                         type="button"
@@ -947,8 +984,8 @@ const Settings = () => {
                         <input
                           type="text"
                           value={projectTemplates[selectedProjectTemplate].subject}
-                          readOnly
-                          className="input bg-gray-50 dark:bg-gray-800 cursor-not-allowed"
+                          onChange={(e) => handleProjectTemplateChange('subject', e.target.value)}
+                          className="input"
                           placeholder="Email subject"
                         />
                       </div>
@@ -960,9 +997,9 @@ const Settings = () => {
                         </label>
                         <textarea
                           value={projectTemplates[selectedProjectTemplate].body}
-                          readOnly
+                          onChange={(e) => handleProjectTemplateChange('body', e.target.value)}
                           rows={12}
-                          className="input font-mono text-sm bg-gray-50 dark:bg-gray-800 cursor-not-allowed"
+                          className="input font-mono text-sm"
                           placeholder="Email HTML content"
                         />
                       </div>
@@ -1006,10 +1043,36 @@ const Settings = () => {
                         </div>
                       </div>
 
-                      <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                        <p className="text-sm text-yellow-800 dark:text-yellow-300">
-                          <strong>Note:</strong> Project email templates are currently view-only. These templates are managed in the database and will be sent automatically when project events occur.
-                        </p>
+                      {/* Test Template */}
+                      <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Test Email Recipient
+                        </label>
+                        <input
+                          type="email"
+                          value={testProjectTemplateEmail}
+                          onChange={(e) => setTestProjectTemplateEmail(e.target.value)}
+                          className="input"
+                          placeholder="your@email.com"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleTestProjectTemplate}
+                          disabled={sendingTest}
+                          className="w-full mt-3 flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                        >
+                          {sendingTest ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Sending...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="w-4 h-4 mr-2" />
+                              Send Test with This Template
+                            </>
+                          )}
+                        </button>
                       </div>
                     </div>
                   </div>
