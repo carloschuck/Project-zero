@@ -35,10 +35,10 @@ app.use(morgan('dev'));
 // Initialize email transporter
 initEmailTransporter();
 
-// Rate limiting for authentication endpoints
+// Rate limiting for authentication endpoints (temporarily increased for testing)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts per window
+  max: 50, // 50 attempts per window (increased for testing)
   message: { error: 'Too many login attempts, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
