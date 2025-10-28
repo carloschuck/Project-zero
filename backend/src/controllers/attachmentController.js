@@ -248,7 +248,7 @@ const downloadAttachment = async (req, res) => {
 
         // Set headers
         res.setHeader('Content-Type', attachment.mime_type);
-        res.setHeader('Content-Disposition', `attachment; filename="${attachment.original_filename}"`);
+        res.setHeader('Content-Disposition', `attachment; filename="${attachment.file_name}"`);
         res.setHeader('Content-Length', attachment.file_size);
 
         // Stream the file
@@ -262,7 +262,7 @@ const downloadAttachment = async (req, res) => {
 
     // Fall back to local file system
     if (fs.existsSync(attachment.file_path)) {
-      res.download(attachment.file_path, attachment.original_filename, (err) => {
+      res.download(attachment.file_path, attachment.file_name, (err) => {
         if (err) {
           console.error('Download error:', err);
           if (!res.headersSent) {
