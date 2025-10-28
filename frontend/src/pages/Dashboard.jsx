@@ -24,7 +24,7 @@ const Dashboard = () => {
     search: '',
     status: '',
     category: '',
-    owner: user?.role === 'user' ? 'created_by_me' : 'all_requests',
+    owner: 'created_by_me', // Default to showing user's own requests
   });
   
   // Column visibility state - stored in localStorage
@@ -45,6 +45,16 @@ const Dashboard = () => {
     fetchCategories();
     if (user?.role === 'admin') {
       fetchUsers();
+    }
+  }, [user]);
+
+  // Update filter when user data loads
+  useEffect(() => {
+    if (user) {
+      setFilters(prev => ({
+        ...prev,
+        owner: user.role === 'user' ? 'created_by_me' : 'all_requests'
+      }));
     }
   }, [user]);
 
