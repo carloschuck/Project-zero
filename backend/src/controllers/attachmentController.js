@@ -47,6 +47,18 @@ const uploadAttachment = async (req, res) => {
       }
 
       const project = projectResult.rows[0];
+      
+      // Debug logging
+      console.log('Project upload debug:', {
+        userId: req.user.id,
+        userRole: req.user.role,
+        projectOwnerId: project.owner_id,
+        memberId: project.member_id,
+        isOwner: project.owner_id === req.user.id,
+        isMember: project.member_id !== null,
+        isAdmin: req.user.role === 'admin'
+      });
+      
       canAddAttachment = 
         project.owner_id === req.user.id || 
         project.member_id !== null ||
