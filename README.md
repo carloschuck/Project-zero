@@ -23,6 +23,7 @@ A modern, enterprise-grade ticketing system with role-based access control, anal
 - [Quick Start](#-quick-start)
 - [Documentation](#-documentation)
 - [Deployment](#-deployment)
+- [File Uploads Fix](#-file-uploads-fix-digitalocean)
 - [Project Structure](#-project-structure)
 - [Contributing](#-contributing)
 - [License](#-license)
@@ -346,6 +347,59 @@ doctl apps create-deployment <app-id>
 # SSH into backend container or use console
 node src/migrations/run.js
 ```
+
+---
+
+## 📤 File Uploads Fix (DigitalOcean)
+
+**Important**: If deploying to DigitalOcean App Platform, file uploads require DigitalOcean Spaces (S3-compatible storage) because the filesystem is ephemeral.
+
+### Quick Setup (5 Minutes)
+
+1. **Install dependencies**:
+```bash
+cd backend
+npm install
+```
+
+2. **Create a DigitalOcean Space**:
+   - Go to: https://cloud.digitalocean.com/spaces
+   - Create new Space (e.g., `ticketing-system-uploads`)
+   - Generate API keys (Manage Keys → Generate New Key)
+
+3. **Add Environment Variables** in App Settings:
+```bash
+SPACES_ENDPOINT=https://nyc3.digitaloceanspaces.com
+SPACES_REGION=nyc3
+SPACES_BUCKET=ticketing-system-uploads
+SPACES_KEY=<your-access-key>  # Mark as encrypted
+SPACES_SECRET=<your-secret-key>  # Mark as encrypted
+```
+
+4. **Deploy**:
+```bash
+git push origin main
+```
+
+### Complete Documentation
+
+- **[UPLOAD_FIX_README.md](UPLOAD_FIX_README.md)** - Quick start guide (⭐ Start here!)
+- **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - Step-by-step checklist
+- **[SPACES_SETUP.md](SPACES_SETUP.md)** - Detailed Spaces setup
+- **[ENV_VARIABLES.md](ENV_VARIABLES.md)** - All environment variables
+- **[FILE_UPLOAD_FIX.md](FILE_UPLOAD_FIX.md)** - Technical details
+
+### Why This is Needed
+
+DigitalOcean App Platform uses containers with ephemeral storage. Files saved to the filesystem are lost on container restart. Spaces provides persistent S3-compatible object storage.
+
+**Cost**: $5/month (includes 250GB storage + 1TB bandwidth)
+
+### Local Development
+
+No changes needed! The app automatically detects the environment:
+- **Production**: Uses DigitalOcean Spaces
+- **Development**: Uses local disk storage
 
 ### Custom Server Deployment
 

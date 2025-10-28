@@ -1,6 +1,8 @@
 const pool = require('../config/database');
 const path = require('path');
 const fs = require('fs');
+const { PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { s3Client, isSpacesConfigured, bucket } = require('../config/spaces');
 
 const uploadAttachment = async (req, res) => {
   try {
@@ -73,11 +75,43 @@ const uploadAttachment = async (req, res) => {
       return res.status(403).json({ error: 'You do not have permission to add attachments' });
     }
 
-    // Generate unique filename for database storage
+    // Generate unique filename
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const ext = path.extname(file.originalname);
     const nameWithoutExt = path.basename(file.originalname, ext);
     const dbFilename = `${nameWithoutExt}-${uniqueSuffix}${ext}`;
+    
+    let storagePath = file.path || 'memory-storage';
+    
+    // If using DigitalOcean Spaces, upload the file
+    if (isSpacesConfigured && s3Client) {
+      try {
+        const folder = ticketId ? 'tickets' : 'projects';
+        const key = `${folder}/${dbFilename}`;
+        
+        const uploadParams = {
+          Bucket: bucket,
+          Key: key,
+          Body: file.buffer || fs.createReadStream(file.path),
+          ContentType: file.mimetype,
+          ACL: 'private', // Keep files private, require authentication to access
+        };
+
+        await s3Client.send(new PutObjectCommand(uploadParams));
+        console.log(`✅ File uploaded to Spaces: ${key}`);
+        
+        storagePath = key; // Store the Spaces key as the path
+        
+        // Clean up local file if it exists
+        if (file.path) {
+          fs.unlinkSync(file.path);
+        }
+      } catch (spacesError) {
+        console.error('Spaces upload error:', spacesError);
+        // Fall back to local/memory storage
+        console.log('⚠️ Falling back to local storage');
+      }
+    }
 
     // Save attachment info to database
     const result = await pool.query(
@@ -90,7 +124,7 @@ const uploadAttachment = async (req, res) => {
         entityType,
         dbFilename,
         file.originalname,
-        file.path || 'memory-storage', // Use placeholder for memory storage
+        storagePath,
         file.size,
         file.mimetype,
         req.user.id
@@ -202,20 +236,44 @@ const downloadAttachment = async (req, res) => {
       return res.status(403).json({ error: 'You do not have permission to download this attachment' });
     }
 
-    // Check if file exists
-    if (!fs.existsSync(attachment.file_path)) {
-      return res.status(404).json({ error: 'File not found on server' });
+    // Download from DigitalOcean Spaces if configured
+    if (isSpacesConfigured && s3Client && attachment.file_path !== 'memory-storage' && !attachment.file_path.startsWith('/')) {
+      try {
+        const getParams = {
+          Bucket: bucket,
+          Key: attachment.file_path,
+        };
+
+        const command = new GetObjectCommand(getParams);
+        const data = await s3Client.send(command);
+
+        // Set headers
+        res.setHeader('Content-Type', attachment.mime_type);
+        res.setHeader('Content-Disposition', `attachment; filename="${attachment.original_filename}"`);
+        res.setHeader('Content-Length', attachment.file_size);
+
+        // Stream the file
+        data.Body.pipe(res);
+        return;
+      } catch (spacesError) {
+        console.error('Spaces download error:', spacesError);
+        return res.status(404).json({ error: 'File not found in storage' });
+      }
     }
 
-    // Send file
-    res.download(attachment.file_path, attachment.original_filename, (err) => {
-      if (err) {
-        console.error('Download error:', err);
-        if (!res.headersSent) {
-          res.status(500).json({ error: 'Failed to download file' });
+    // Fall back to local file system
+    if (fs.existsSync(attachment.file_path)) {
+      res.download(attachment.file_path, attachment.original_filename, (err) => {
+        if (err) {
+          console.error('Download error:', err);
+          if (!res.headersSent) {
+            res.status(500).json({ error: 'Failed to download file' });
+          }
         }
-      }
-    });
+      });
+    } else {
+      return res.status(404).json({ error: 'File not found on server' });
+    }
   } catch (error) {
     console.error('Download attachment error:', error);
     if (!res.headersSent) {
@@ -256,8 +314,22 @@ const deleteAttachment = async (req, res) => {
     // Delete from database
     await pool.query('DELETE FROM attachments WHERE id = $1', [attachmentId]);
 
-    // Delete file from filesystem
-    if (fs.existsSync(attachment.file_path)) {
+    // Delete from DigitalOcean Spaces if configured
+    if (isSpacesConfigured && s3Client && attachment.file_path !== 'memory-storage' && !attachment.file_path.startsWith('/')) {
+      try {
+        const deleteParams = {
+          Bucket: bucket,
+          Key: attachment.file_path,
+        };
+
+        await s3Client.send(new DeleteObjectCommand(deleteParams));
+        console.log(`✅ File deleted from Spaces: ${attachment.file_path}`);
+      } catch (spacesError) {
+        console.error('Failed to delete file from Spaces:', spacesError);
+        // Continue anyway since DB record is deleted
+      }
+    } else if (fs.existsSync(attachment.file_path)) {
+      // Delete file from local filesystem
       try {
         fs.unlinkSync(attachment.file_path);
       } catch (fsError) {

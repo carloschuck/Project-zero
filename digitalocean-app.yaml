@@ -72,6 +72,20 @@ services:
         value: 7d
       - key: FRONTEND_URL
         value: ${APP_URL}
+      # DigitalOcean Spaces Configuration for File Uploads
+      # You need to create a Space and add these values after deployment
+      - key: SPACES_ENDPOINT
+        value: https://nyc3.digitaloceanspaces.com  # Change to your region
+      - key: SPACES_REGION
+        value: nyc3  # Change to your region
+      - key: SPACES_BUCKET
+        value: your-bucket-name  # CHANGE THIS to your Space name
+      - key: SPACES_KEY
+        type: SECRET
+        value: your-spaces-access-key  # CHANGE THIS to your Spaces access key
+      - key: SPACES_SECRET
+        type: SECRET
+        value: your-spaces-secret-key  # CHANGE THIS to your Spaces secret key
     health_check:
       http_path: /health
       initial_delay_seconds: 30
