@@ -49,6 +49,13 @@ const getAllUsers = async (req, res) => {
     const params = [];
     let paramCount = 1;
 
+    // Filter out admin users for non-admin users
+    if (req.user.role !== 'admin') {
+      query += ` AND role != $${paramCount}`;
+      params.push('admin');
+      paramCount++;
+    }
+
     if (role) {
       query += ` AND role = $${paramCount}`;
       params.push(role);
@@ -60,10 +67,25 @@ const getAllUsers = async (req, res) => {
 
     const result = await pool.query(query, params);
 
-    const countResult = await pool.query(
-      'SELECT COUNT(*) FROM users' + (role ? ' WHERE role = $1' : ''),
-      role ? [role] : []
-    );
+    // Build count query with same filters
+    let countQuery = 'SELECT COUNT(*) FROM users WHERE 1=1';
+    const countParams = [];
+    let countParamCount = 1;
+
+    // Apply same admin filter for count
+    if (req.user.role !== 'admin') {
+      countQuery += ` AND role != $${countParamCount}`;
+      countParams.push('admin');
+      countParamCount++;
+    }
+
+    if (role) {
+      countQuery += ` AND role = $${countParamCount}`;
+      countParams.push(role);
+      countParamCount++;
+    }
+
+    const countResult = await pool.query(countQuery, countParams);
 
     res.json({
       users: result.rows,
