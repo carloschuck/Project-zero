@@ -167,17 +167,14 @@ const getTickets = async (req, res) => {
       params.push(req.user.id);
       paramCount++;
     } else if (owner === 'all_requests') {
-      // For admins and department leads, show all requests they have access to
-      if (req.user.role === 'department_lead') {
-        query += ` AND (c.department = $${paramCount} OR t.assigned_to = $${paramCount + 1})`;
-        params.push(req.user.department, req.user.id);
-        paramCount += 2;
-      } else if (req.user.role === 'event_coordinator') {
+      // For admins and department leads, show all requests
+      // No additional filter needed - they see everything
+      if (req.user.role === 'event_coordinator') {
         query += ` AND (c.name LIKE '%Event%' OR t.assigned_to = $${paramCount})`;
         params.push(req.user.id);
         paramCount++;
       }
-      // Admins see everything, no additional filter
+      // Admins and department_lead see everything, no additional filter
     } else {
       // Default role-based filtering when no owner filter is specified
       if (req.user.role === 'user') {
@@ -185,9 +182,8 @@ const getTickets = async (req, res) => {
         params.push(req.user.id);
         paramCount++;
       } else if (req.user.role === 'department_lead') {
-        query += ` AND (c.department = $${paramCount} OR t.assigned_to = $${paramCount + 1})`;
-        params.push(req.user.department, req.user.id);
-        paramCount += 2;
+        // Department leads see all requests by default (same as all_requests)
+        // No filter needed
       } else if (req.user.role === 'event_coordinator') {
         query += ` AND (c.name LIKE '%Event%' OR t.assigned_to = $${paramCount})`;
         params.push(req.user.id);
@@ -241,15 +237,14 @@ const getTickets = async (req, res) => {
       countParams.push(req.user.id);
       countParamCount++;
     } else if (owner === 'all_requests') {
-      if (req.user.role === 'department_lead') {
-        countQuery += ` AND (c.department = $${countParamCount} OR t.assigned_to = $${countParamCount + 1})`;
-        countParams.push(req.user.department, req.user.id);
-        countParamCount += 2;
-      } else if (req.user.role === 'event_coordinator') {
+      // For admins and department leads, show all requests
+      // No additional filter needed - they see everything
+      if (req.user.role === 'event_coordinator') {
         countQuery += ` AND (c.name LIKE '%Event%' OR t.assigned_to = $${countParamCount})`;
         countParams.push(req.user.id);
         countParamCount++;
       }
+      // Admins and department_lead see everything, no additional filter
     } else {
       // Default role-based filtering
       if (req.user.role === 'user') {
@@ -257,9 +252,8 @@ const getTickets = async (req, res) => {
         countParams.push(req.user.id);
         countParamCount++;
       } else if (req.user.role === 'department_lead') {
-        countQuery += ` AND (c.department = $${countParamCount} OR t.assigned_to = $${countParamCount + 1})`;
-        countParams.push(req.user.department, req.user.id);
-        countParamCount += 2;
+        // Department leads see all requests by default (same as all_requests)
+        // No filter needed
       } else if (req.user.role === 'event_coordinator') {
         countQuery += ` AND (c.name LIKE '%Event%' OR t.assigned_to = $${countParamCount})`;
         countParams.push(req.user.id);
@@ -673,10 +667,8 @@ const getStats = async (req, res) => {
     if (req.user.role === 'user') {
       whereClause = 'user_id = $1';
       params.push(req.user.id);
-    } else if (req.user.role === 'department_lead') {
-      whereClause = 'category_id IN (SELECT id FROM categories WHERE department = $1)';
-      params.push(req.user.department);
     }
+    // Admins and department_lead see all stats (no filter needed)
 
     const stats = await pool.query(
       `SELECT 
