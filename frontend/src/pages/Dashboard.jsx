@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
@@ -19,12 +19,16 @@ const Dashboard = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [assignToUser, setAssignToUser] = useState('');
   
-  // Filter states
+  // Track if initial user load has completed to avoid double fetching
+  const initialLoadComplete = useRef(false);
+  const isSettingInitialFilter = useRef(false);
+  
+  // Filter states - will be initialized based on user role in useEffect
   const [filters, setFilters] = useState({
     search: '',
     status: '',
     category: '',
-    owner: 'created_by_me', // Default to showing user's own requests
+    owner: 'all_requests', // Default, will be set correctly when user loads
   });
   
   // Column visibility state - stored in localStorage
@@ -40,26 +44,46 @@ const Dashboard = () => {
     };
   });
 
+  // Initialize filter and fetch data when user loads
   useEffect(() => {
-    fetchDashboardData();
-    fetchCategories();
-    if (user?.role === 'admin') {
-      fetchUsers();
+    if (user && !initialLoadComplete.current) {
+      // Set initial filter based on user role
+      const initialOwner = user.role === 'user' ? 'created_by_me' : 'all_requests';
+      
+      // Mark that we're setting initial filter to skip the filter effect
+      isSettingInitialFilter.current = true;
+      
+      setFilters({
+        search: '',
+        status: '',
+        category: '',
+        owner: initialOwner
+      });
+
+      // Fetch initial data
+      fetchDashboardData();
+      fetchCategories();
+      if (user.role === 'admin') {
+        fetchUsers();
+      }
+      
+      initialLoadComplete.current = true;
+      // Reset flag after a microtask to allow filter effect to see it
+      Promise.resolve().then(() => {
+        isSettingInitialFilter.current = false;
+      });
+    } else if (!user) {
+      // Reset flags when user logs out
+      initialLoadComplete.current = false;
+      isSettingInitialFilter.current = false;
     }
   }, [user]);
 
-  // Update filter when user data loads
+  // Fetch data when filters change (but skip initial load)
   useEffect(() => {
-    if (user) {
-      setFilters(prev => ({
-        ...prev,
-        owner: user.role === 'user' ? 'created_by_me' : 'all_requests'
-      }));
+    if (user && initialLoadComplete.current && !isSettingInitialFilter.current) {
+      fetchDashboardData();
     }
-  }, [user]);
-
-  useEffect(() => {
-    fetchDashboardData();
   }, [filters]);
 
   useEffect(() => {
@@ -182,7 +206,8 @@ const Dashboard = () => {
     }
   };
 
-  if (loading) {
+  // Show loading state if user is not yet loaded or initial data is loading
+  if (loading || !user) {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
